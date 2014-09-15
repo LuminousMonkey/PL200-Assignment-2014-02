@@ -3,24 +3,27 @@
 
 enum {
   NONE,
+  ARRAY,
+  ASSIGN,
+  _BEGIN_,
+  CALL,
+  CONST,
+  DECLARATION,
+  DO,
+  END,
+  FOR,
+  FUNCTION,
   IDENT,
+  IF,
+  IMPLEMENTATION,
+  INTERVAL,
   NUMBER,
-  PLUS,
-  MINUS,
-  MULTIPLY,
-  SEMICOLON,
-  BEGIN_BEGIN,
-  END_BEGIN,
-  BEGIN_FOR,
-  END_FOR,
-  ASSIGNMENT,
-  BEGIN_DO,
-  END_DO,
-  BEGIN_WHILE,
-  END_WHILE,
-  BEGIN_IF,
-  END_IF,
-  THEN
+  OF,
+  PROCEDURE,
+  THEN,
+  TYPE,
+  VAR,
+  WHILE
 } TokenTypes;
 
 #endif

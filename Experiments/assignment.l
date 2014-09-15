@@ -1,37 +1,59 @@
+/* Common Regex */
+LETTERS [a-z]
+DIGITS  [0-9]
+WSPACE  [ \t\v\n\f]
+
 %{
 #include "TokenTypes.h"
 %}
 
 %%
 
-"BEGIN"          return BEGIN_BEGIN;
-"END"            return END_BEGIN;
+"ARRAY"          { return ARRAY; }
+"BEGIN"          { return _BEGIN_; }
+"CALL"           { return CALL; }
+"CONST"          { return CONST;}
+"DECLARATION"    { return DECLARATION; }
+"DO"             { return DO; }
+"END"            { return END; }
+"FOR"            { return FOR; }
+"FUNCTION"       { return FUNCTION; }
+"IF"             { return IF; }
+"IMPLEMENTATION" { return IMPLEMENTATION; }
+"OF"             { return OF; }
+"PROCEDURE"      { return PROCEDURE; }
+"THEN"           { return THEN; }
+"TYPE"           { return TYPE; }
+"VAR"            { return VAR; }
+"WHILE"          { return WHILE; }
 
-"FOR"            return BEGIN_FOR;
-"END FOR"        return END_FOR;
+{LETTERS}*       { return IDENT; }
+{DIGITS}*        { return NUMBER; }
 
-"DO"             return BEGIN_DO;
-"END DO"         return END_DO;
+":="             { return ASSIGN; }
+".."             { return INTERVAL; }
 
-"WHILE"          return BEGIN_WHILE;
-"END WHILE"      return END_WHILE;
+"("              { return '('; }
+")"              { return ')'; }
 
-"IF"             return BEGIN_IF;
-"THEN"           return THEN;
-"END IF"         return END_IF;
+"="              { return '='; }
+":"              { return ':'; }
+";"              { return ';'; }
 
-;                return SEMICOLON;
+"{"              { return '{'; }
+"}"              { return '}'; }
 
-:=               return ASSIGNMENT;
+"["              { return '['; }
+"]"              { return ']'; }
 
-\+               return PLUS;
-\-               return MINUS;
-\*               return MULTIPLY;
+","              { return ','; }
+"."              { return '.'; }
 
-[a-z]+           return IDENT;
-[0-9]+           return NUMBER;
+"+"              { return '+'; }
+"-"              { return '-'; }
+"*"              { return '*'; }
 
-[ \t\n]          ;
+{WSPACE}         { /* Whitespace seperates tokens. */ }
 .                printf("Unexpected character.\n");
 %%
 
