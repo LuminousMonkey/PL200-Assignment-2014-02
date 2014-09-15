@@ -13,7 +13,7 @@ int main(void) {
   nameToken = yylex();
 
   while(nameToken != 0) {
-    printf("%d\n", nameToken);
+    printf("%d (%s)\n", nameToken, yytext);
     nameToken = yylex();
   }
 
