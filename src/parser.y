@@ -1,35 +1,60 @@
 %{
-/* Experimenting with grammar. */
-
 #include <stdio.h>
 
-int yylex();
+#include "parser.h"
+#include "lexical.h"
 
-void yyerror(const char *inString);
+void yyerror(const char *msg);
+
 %}
 
-%token         NUMBER
-
-%left '-' '+'
+%token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION IDENT
+%token IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE VAR WHILE
 
 %%
 
-program:        program expr '\n' {printf("%d\n", $2);}
-        |
+compound_statement:
+                _BEGIN_ statement END { printf("Compound statement.\n"); }
                 ;
 
-expr:           NUMBER { $$=$1; printf("Here"); }
-        |       expr '+' expr { $$ = $1 + $3; }
-        |       expr '-' expr { $$ = $1 - $3; }
+statement:      assignment { printf("Statement\n"); }
                 ;
+
+assignment:     ident ASSIGN expression { printf("Assignment.\n"); }
+                ;
+
+expression:
+                term { printf("Expression\n"); }
+        |       term '+' term { printf("Expr: term + term\n"); }
+        |       term '-' term { printf("Expr: term - term\n"); }
+                ;
+
+term:
+                id_num { printf("id_num\n"); }
+        |       id_num '*' id_num { printf("id_num * id_num\n"); }
+        |       id_num '+' id_num { printf("id_num + id_num\n"); }
+                ;
+
+id_num:
+                ident { printf("Id_num: Ident\n"); }
+        |       number { printf("Id_num: Number\n"); }
+                ;
+
+number:
+                NUMBER { printf("Number.\n"); }
+                ;
+
+ident:
+                IDENT { printf("Ident.\n"); }
+                ;
+
 %%
 #include <stdio.h>
 
 int main() {
-  yyparse();
-}
+  do {
+    yyparse();
+  } while (!feof(yyin));
 
-void yyerror(const char *inString) {
-  fflush(stdout);
-  fprintf(stderr, "*** %s\n", inString);
+  return 0;
 }

@@ -4,8 +4,13 @@ DIGITS  [0-9]
 WSPACE  [ \t\v\n\f]
 
 %{
-#include "TokenTypes.h"
+#include <stdio.h>
+
+#include "parser.h"
 %}
+
+%option nounput
+%option warn nodefault
 
 %%
 
@@ -59,4 +64,9 @@ WSPACE  [ \t\v\n\f]
 
 int yywrap(void) {
   return 1;
+}
+
+int yyerror(const char *msg) {
+  fflush(stdout);
+  fprintf(stderr, "*** %s\n", msg);
 }

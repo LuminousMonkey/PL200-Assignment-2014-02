@@ -26,14 +26,14 @@ $(PROG): $(OBJFILES)
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
 
-src/lexical.c: src/lexical.l
-	$(LEX) -o$@ $<
+src/lexical.h src/lexical.c: src/lexical.l
+	$(LEX) --header-file=src/lexical.h -osrc/lexical.c $<
 
-src/parser.c: src/parser.y
-	bison -o$@ $<
+src/parser.c: src/parser.y src/lexical.h
+	bison -d -o$@ $<
 
 clean:
-	rm -f $(OBJFILES) $(DEPFILES) $(PROG)
+	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h src/lexical.c src/lexical.h $(PROG)
 
 # Let GCC work out the dependencies.
 -include $(DEPFILES)
