@@ -4,6 +4,9 @@ DIGITS  [0-9]
 WSPACE  [ \t\v\n\f]
 
 %{
+/* Remove function that isn't used. */
+#define YY_NO_INPUT
+
 #include <stdio.h>
 
 #include "parser.h"
@@ -32,8 +35,8 @@ WSPACE  [ \t\v\n\f]
 "VAR"            { return VAR; }
 "WHILE"          { return WHILE; }
 
-{LETTERS}*       { return IDENT; }
-{DIGITS}*        { return NUMBER; }
+{LETTERS}*       { yylval.text = strdup(yytext); return IDENT; }
+{DIGITS}*        { yylval.num = atoi(yytext); return NUMBER; }
 
 ":="             { return ASSIGN; }
 ".."             { return INTERVAL; }
@@ -66,7 +69,7 @@ int yywrap(void) {
   return 1;
 }
 
-int yyerror(const char *msg) {
+void yyerror(const char *msg) {
   fflush(stdout);
   fprintf(stderr, "*** %s\n", msg);
 }

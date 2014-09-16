@@ -1,0 +1,5 @@
+IMPLEMENTATION OF testfile
+  CONST blah = 1;
+
+  test := 1
+.

@@ -1,11 +1,12 @@
 PROG := pl-assignment
 LIBS =
 
-CFLAGS = -MMD -Wall -Wextra
-
 CC := gcc
 LEX := flex
 YACC := bison
+
+CFLAGS = -MMD -Wall -Wextra
+BFLAGS = -d -Werror -fcaret --report=all --report-file=bison.report
 
 OUTDIRS := obj
 
@@ -30,7 +31,7 @@ src/lexical.h src/lexical.c: src/lexical.l
 	$(LEX) --header-file=src/lexical.h -osrc/lexical.c $<
 
 src/parser.c: src/parser.y src/lexical.h
-	bison -d -o$@ $<
+	bison $(BFLAGS) -o$@ $<
 
 clean:
 	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h src/lexical.c src/lexical.h $(PROG)

@@ -1,6 +1,7 @@
 obj
 .*\.o
 pl-assignment
-lexical\.c
-parser\.c
+src/lexical\.(c|h)
+src/parser\.(c|h)
 Experiments
+bison\.report
