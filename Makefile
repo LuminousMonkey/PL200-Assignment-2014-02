@@ -6,7 +6,7 @@ LEX := flex
 YACC := bison
 
 CFLAGS = -MMD -Wall -Wextra
-BFLAGS = -d -Werror -fcaret --report=all --report-file=bison.report
+BFLAGS = -d -Werror --report=all --report-file=bison.report
 
 OUTDIRS := obj
 
@@ -34,7 +34,8 @@ src/parser.c: src/parser.y src/lexical.h
 	bison $(BFLAGS) -o$@ $<
 
 clean:
-	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h src/lexical.c src/lexical.h $(PROG)
+	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h \
+	    src/lexical.c src/lexical.h bison.report $(PROG)
 
 # Let GCC work out the dependencies.
 -include $(DEPFILES)
