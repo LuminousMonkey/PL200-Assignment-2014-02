@@ -28,10 +28,10 @@ obj/%.o: src/%.c
 	$(CC) ($CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
 
 src/lexical.c: src/lexical.l
-	$(LEX) $< -o $@
+	$(LEX) -o$@ $<
 
 src/parser.c: src/parser.y
-	bison $< -o $@
+	bison -o$@ $<
 
 clean:
 	rm -f $(OBJFILES) $(DEPFILES) $(PROG)
