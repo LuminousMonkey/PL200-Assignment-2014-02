@@ -16,19 +16,21 @@ DEPFILES := $(patsubst src/%.c,obj/%.d,$(SRCFILES))
 
 .PHONY: clean dirs
 
+all: dirs $(PROG)
+
 dirs:
 	@mkdir -p $(OUTDIRS)
 
-$(PROG): $(OBJFILES)
+$(PROG): src/lexical.c src/parser.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 obj/%.o: src/%.c
 	$(CC) ($CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
 
-obj/lexical.o: src/lexical.l
+src/lexical.c: src/lexical.l
 	$(LEX) $< -o $@
 
-obj/parser.o: src/parser.y
+src/parser.c: src/parser.y
 	bison $< -o $@
 
 clean:
