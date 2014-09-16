@@ -9,10 +9,9 @@ YACC := bison
 
 OUTDIRS := obj
 
-SRCFILES := $(wildcard src/*.c)
-
-OBJFILES := $(patsubst src/%.c,obj/%.o,$(SRCFILES))
-DEPFILES := $(patsubst src/%.c,obj/%.d,$(SRCFILES))
+SRCFILES := src/parser.y src/lexical.y
+OBJFILES := obj/parser.o obj/lexical.o
+DEPFILES := $(patsubst obj/%.o,obj/%.d,$(OBJFILES))
 
 .PHONY: clean dirs
 
@@ -21,11 +20,11 @@ all: dirs $(PROG)
 dirs:
 	@mkdir -p $(OUTDIRS)
 
-$(PROG): src/lexical.c src/parser.c
+$(PROG): $(OBJFILES)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 obj/%.o: src/%.c
-	$(CC) ($CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
+	$(CC) $(CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
 
 src/lexical.c: src/lexical.l
 	$(LEX) -o$@ $<
