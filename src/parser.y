@@ -14,8 +14,9 @@ void yyerror(const char *msg);
   int num;
 }
 
-%token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION IDENT
-%token IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE VAR WHILE
+%token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION
+%token IDENT IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE
+%token VAR WHILE
 
 /* Our types for token values, use the union fields above. */
 %type <text> ident IDENT
@@ -44,7 +45,7 @@ optional_var_declaration:
                 ;
 
 constant_declaration:
-                ident '=' number ';' { printf("%s := %d\n", $1, $3);}
+                ident '=' number ';' { printf("[label=const_decl]\n");}
         |       extra_const_declaration ';'
                 ;
 
@@ -65,10 +66,10 @@ function_declaration:
                 ;
 
 implementation_unit:
-                IMPLEMENTATION OF ident block '.' { printf("Implementation: %s.\n", $3); }
+                IMPLEMENTATION OF ident block '.' { printf("[label=\"Implementation\"]\n"); }
                 ;
 
-block:          specification_part implementation_part { printf("Block.\n");}
+block:          specification_part implementation_part { printf("[label=\"Block\"]\n");}
                 ;
 
 implementation_part:
@@ -95,10 +96,10 @@ statement:      assignment { printf("Statement: Assign\n"); }
         |       compound_statement
                 ;
 
-assignment:     ident ASSIGN expression { printf("Assign: %s :=\n", $1); }
+assignment:     ident ASSIGN expression { printf("assign: [label=%s]\n", $1); }
                 ;
 
-procedure_call: CALL ident { printf("Procedure call\n"); }
+procedure_call: CALL ident { printf("[label=\"Call\"]\n"); }
                 ;
 
 if_statement:   IF expression THEN statement END IF {printf("IF\n");}
@@ -110,27 +111,27 @@ while_statement:
 do_statement:   DO statement WHILE expression END DO {printf("DO\n");}
                 ;
 
-for_statement:  FOR ident ASSIGN expression DO statement END FOR { printf("For Loop;"); }
+for_statement:  FOR ident ASSIGN expression DO statement END FOR { printf("[label=For]"); }
                 ;
 
 expression:     term { printf("Expression\n"); }
-        |       term '+' term { printf("Expr: term + term\n"); }
-        |       term '-' term { printf("Expr: term - term\n"); }
+        |       term '+' term { printf("[label=\"expr: +\"]\n"); }
+        |       term '-' term { printf("[label=\"expr: -\"]\n"); }
                 ;
 
-term:           id_num '*' id_num { printf("id_num * id_num\n"); }
-  /*      |       id_num '+' id_num { printf("id_num + id_num\n"); } */
-        |       id_num { printf("Term: id_num.\n"); }
+term:           id_num '*' id_num { printf("[label=\"term: *\"]\n"); }
+        |       id_num '/' id_num { printf("[label=\"term: /\"]\n"); }
+        |       id_num { printf("[label=\"term: id_num\"]  \n"); }
                 ;
 
-id_num:         ident { printf("Id_num: Ident\n"); }
-        |       number { printf("Id_num: Number\n"); }
+id_num:         ident { printf("[label=\"id_num\"]\n"); }
+        |       number { printf("[label=\"id_num\"]\n"); }
                 ;
 
-number:         NUMBER { printf("Number: %d\n", $1); }
+number:         NUMBER { printf("[label=\"number: %d\"]\n", $1); $$ = $1; }
                 ;
 
-ident:          IDENT { printf("Id: %s\n", $1); }
+ident:          IDENT { printf("[label=\"ident: %s\"]\n", $1); $$ = $1; }
                 ;
 
 %%

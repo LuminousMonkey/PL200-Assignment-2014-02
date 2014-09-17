@@ -60,6 +60,7 @@ WSPACE  [ \t\v\n\f]
 "+"              { return '+'; }
 "-"              { return '-'; }
 "*"              { return '*'; }
+"/"              { return '/'; }
 
 {WSPACE}         { /* Whitespace seperates tokens. */ }
 .                printf("Unexpected character.\n");

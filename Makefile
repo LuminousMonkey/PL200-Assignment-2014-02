@@ -5,8 +5,15 @@ CC := gcc
 LEX := flex
 YACC := bison
 
+YACCVERSION := $(shell expr `$(YACC) --version | grep ^bison | sed 's/^.* //g'` \> 2.5)
+
 CFLAGS = -MMD -Wall -Wextra
-BFLAGS = -d -Werror --report=all --report-file=bison.report
+YFLAGS = -d
+LEXFLAGS = --header-file=src/lexical.h
+
+ifeq "$(YACCVERSION)" "1"
+YFLAGS += -Werror --report=all --report-file=bison.report
+endif
 
 OUTDIRS := obj
 
@@ -28,10 +35,10 @@ obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
 
 src/lexical.h src/lexical.c: src/lexical.l
-	$(LEX) --header-file=src/lexical.h -osrc/lexical.c $<
+	$(LEX) $(LEXFLAGS) -osrc/lexical.c $<
 
 src/parser.c: src/parser.y src/lexical.h
-	bison $(BFLAGS) -o$@ $<
+	bison $(YFLAGS) -o$@ $<
 
 clean:
 	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h \
