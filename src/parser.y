@@ -48,7 +48,9 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
 
   for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
     currentChild = va_arg(argp, NodeStruct*);
-    printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type, currentChild->index);
+    if (currentChild->type != NULL) {
+      printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type, currentChild->index);
+    }
   }
 }
 %}
@@ -68,42 +70,33 @@ basic_program:  declaration_unit
 
 declaration_unit:
                 DECLARATION OF ident
-                optional_const_declaration
-                optional_var_declaration
-                DECLARATION END
-                { printf("DECLARATION OF " "%s" "DECLARATION END", $3.text); }
+                declaration_list
+                DECLARATION END {
+                outputGvNodeHeader("declaration", "Declaration Unit", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 3, &$3, &$4, &$5);
+                }
                 ;
 
-optional_const_declaration:
-                CONST constant_declaration
+declaration_list:
+                declaration_list CONST const_assignment ';' {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       declaration_list VAR var_assignment ';' {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       declaration_list type_declaration {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
         |
-                ;
-
-optional_var_declaration:
-                VAR variable_declaration
-        |
-                ;
-
-constant_declaration:
-                const_assignment ';' {
-                outputGvNodeHeader("const_decl", "Const Dec", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 const_assignment:
-                ident '=' number
-                {
+                ident '=' number {
                 outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident '=' number ',' const_assignment {
                 outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
-                ;
-
-variable_declaration:
-                var_assignment ';' {
-                outputGvNodeHeader("var_decl", "Var Decl", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 var_assignment:
@@ -116,11 +109,69 @@ var_assignment:
                 ;
 
 procedure_declaration:
-                PROCEDURE ident ';' block ';'
+                PROCEDURE ident ';' block ';' {
+                outputGvNodeHeader("procedure_decl", "Procedure Decl", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 function_declaration:
-                FUNCTION ident ';' block ';'
+                FUNCTION ident ';' block ';' {
+                outputGvNodeHeader("function_decl", "Function Decl", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
+                ;
+
+type_declaration:
+                TYPE ident ':' type ';' {
+                outputGvNodeHeader("type_declaration", "Type Declaration", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
+                ;
+
+type:           basic_type {
+                outputGvNodeHeader("type", "Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+        |       array_type {
+                outputGvNodeHeader("type", "Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+                ;
+
+basic_type:     ident {
+                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+        |       enumerated_type {
+                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+        |       range_type {
+                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+                ;
+
+enumerated_type:
+                '{' ident_list '}' {
+                outputGvNodeHeader("enumerated_type", "Enumerated Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+                ;
+
+ident_list:     ident_list ',' ident {
+                outputGvNodeHeader("ident_list", "Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       ident {
+                outputGvNodeHeader("ident_list", "Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+                ;
+
+range_type:     '[' range ']' {
+                outputGvNodeHeader("range_type", "Range Type", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+                ;
+
+array_type:     ARRAY ident '[' range ']' OF type {
+                outputGvNodeHeader("range", "Range", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 3, &$2, &$4, &$7); }
+                ;
+
+range:          number INTERVAL number {
+                outputGvNodeHeader("range", "Range", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 implementation_unit:
@@ -141,10 +192,10 @@ implementation_part:
                 ;
 
 specification_part:
-                CONST constant_declaration {
+                CONST const_assignment ';' {
                 outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
-        |       VAR variable_declaration {
+        |       VAR var_assignment ';' {
                 outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
         |       procedure_declaration {
@@ -197,7 +248,7 @@ procedure_call: CALL ident { printf("[label=\"Call\"]\n"); }
                 ;
 
 if_statement:   IF expression THEN statement END IF {
-                outputGvNodeHeader("if", "IF", &$$, &nodeCount);
+                outputGvNodeHeader("if", "If", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 

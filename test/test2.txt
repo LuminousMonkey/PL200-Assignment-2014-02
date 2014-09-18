@@ -1,0 +1,8 @@
+DECLARATION OF testdec
+  CONST test = 1, test = 5;
+  VAR fish : 8;
+  VAR twonky : 9;
+  CONST blah = 1;
+  TYPE testtype : fish;
+  TYPE asdfasfd : [4..5];
+DECLARATION END
