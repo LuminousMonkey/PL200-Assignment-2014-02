@@ -5,4 +5,5 @@ DECLARATION OF testdec
   CONST blah = 1;
   TYPE testtype : fish;
   TYPE asdfasfd : [4..5];
+  TYPE blob : ARRAY hip[23..22] OF fish;
 DECLARATION END

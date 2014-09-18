@@ -165,7 +165,7 @@ range_type:     '[' range ']' {
                 ;
 
 array_type:     ARRAY ident '[' range ']' OF type {
-                outputGvNodeHeader("range", "Range", &$$, &nodeCount);
+                outputGvNodeHeader("array", "Array", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$2, &$4, &$7); }
                 ;
 
