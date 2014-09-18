@@ -1,4 +1,5 @@
 %{
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "parser.h"
@@ -8,13 +9,56 @@ void yyerror(const char *msg);
 
 int nodeCount = 0;
 
+/*
+ * outputGvNodeHeader
+ *
+ * Takes an id string (type), label, node, and count of how many nodes
+ * that have been read already. Will modify the given node so it will
+ * have the given type and label incase these are needed further up in
+ * the tree. It will then output the GraphViz header for this node.
+ *
+ * Yes, this is doing two things, mutating and outputting, however,
+ * given the format of Bison and how well this function fits with what
+ * is being done, I've bend that rule a little.
+ *
+ * type - String that describes the type of the node.
+ * label - String to show in the actual node.
+ * node - Pointer to node structure that we will modify and print
+ *        header for.
+ * inNodeCounter - pointer to int that counts how many nodes we're
+ *                 read.
+ */
+void outputGvNodeHeader(const char* const type,
+                        const char* const label,
+                        NodeStruct *node, int* const inNodeCounter) {
+  node->index = (*inNodeCounter)++;
+  node->type = type;
+  node->label = label;
+
+  printf("%s%d [label=\"%s\"]\n", type, node->index, label);
+}
+
+void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
+  va_list argp;
+
+  va_start(argp, nArgs);
+
+  NodeStruct* currentChild;
+
+  for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
+    currentChild = va_arg(argp, NodeStruct*);
+    printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type, currentChild->index);
+  }
+}
 %}
 
 %code requires {
   typedef struct {
     int index;
-    char *text;
     int numValue;
+    const char *text;
+    const char *type;
+    const char *label;
   } NodeStruct;
 
 #define YYSTYPE NodeStruct
@@ -52,49 +96,34 @@ optional_var_declaration:
                 ;
 
 constant_declaration:
-                const_assignment ';'
-                { $$.index = nodeCount++;
-                printf("const_decl%d [label=\"Const Dec\"]\n", $$.index);
-                printf("const_decl%d -> const_assign%d\n", $$.index, $1.index);
-                }
+                const_assignment ';' {
+                outputGvNodeHeader("const_decl", "Const Dec", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 const_assignment:
                 ident '=' number
                 {
-                printf("const_assign%d [label=\"Const Assign\"]\n", $$.index);
-                printf("const_assign%d -> ident%d\n", $$.index, $1.index);
-                printf("const_assign%d -> number%d\n", $$.index, $3.index);}
-        |       ident '=' number ',' const_assignment
-                { $$.index = nodeCount++;
-                printf("const_assign%d [label=\"Const Assign\"]\n", $$.index);
-                printf("const_assign%d -> ident%d\n", $$.index, $1.index);
-                printf("const_assign%d -> number%d\n", $$.index, $3.index);
-                printf("const_assign%d -> const_assign%d\n", $$.index, $5.index);
-                }
+                outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       ident '=' number ',' const_assignment {
+                outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
 variable_declaration:
-                var_assignment ';'
-                { $$.index = nodeCount++;
-                printf("var_decl%d [label=\"Var Dec\"]\n", $$.index);
-                printf("var_decl%d -> var_assign%d\n", $$.index, $1.index);
-                }
+                var_assignment ';' {
+                outputGvNodeHeader("var_decl", "Var Decl", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 var_assignment:
-                ident ':' number
-                {
-                printf("var_assign%d [label=\"Var Assign\"]\n", $$.index);
-                printf("var_assign%d -> ident%d\n", $$.index, $1.index);
-                printf("var_assign%d -> number%d\n", $$.index, $3.index);}
-        |       ident ':' number ',' var_assignment
-                { $$.index = nodeCount++;
-                printf("var_assign%d [label=\"Var Assign\"]\n", $$.index);
-                printf("var_assign%d -> ident%d\n", $$.index, $1.index);
-                printf("var_assign%d -> number%d\n", $$.index, $3.index);
-                printf("var_assign%d -> var_assign%d\n", $$.index, $5.index);
-                }
+                ident ':' number {
+                outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       ident ':' number ',' var_assignment {
+                outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
 procedure_declaration:
@@ -107,144 +136,139 @@ function_declaration:
 
 implementation_unit:
                 IMPLEMENTATION OF ident block '.' {
-                $$.index = nodeCount++;
-                printf("implem_unit%d [label=\"Implementation\"]\n", $$.index);
-                printf("implem_unit%d -> ident%d\n", $$.index, $3.index);
-                printf("implem_unit%d -> block%d\n", $$.index, $4.index); }
+                outputGvNodeHeader("implem_unit", "Implementation", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$3, &$4); }
                 ;
 
-block:          specification_part implementation_part
-                { $$.index = nodeCount++;
-                printf("block%d [label=\"Block\"]\n", $$.index);
-                printf("block%d -> spec_part%d\n", $$.index, $1.index);
-                printf("block%d -> implem_part%d\n", $$.index, $2.index);}
+block:          specification_part implementation_part {
+                outputGvNodeHeader("block", "Block", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
                 ;
 
 implementation_part:
                 statement {
-                $$.index = nodeCount++;
-                printf("implem_part%d [label=\"implem_part\"]\n", $$.index);
-                printf("implem_part%d -> statement%d\n", $$.index, $1.index);}
+                outputGvNodeHeader("implem_part", "Implem Part", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 specification_part:
                 CONST constant_declaration {
-                $$.index = nodeCount++;
-                printf("spec_part%d [label=\"spec_part\"]\n", $$.index);
-                printf("spec_part%d -> const_decl%d\n", $$.index, $2.index);}
-        |       VAR variable_declaration
-        |       procedure_declaration
-        |       function_declaration
+                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+        |       VAR variable_declaration {
+                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+        |       procedure_declaration {
+                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+        |       function_declaration {
+                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 compound_statement:
                 _BEGIN_ statement_loop END {
-                $$.index = nodeCount++;
-                printf("compound_statement%d [label=\"Compound statement\"]\n", $$.index);
-                printf("compound_statement%d -> statement_loop%d\n", $$.index, $2.index); }
+                outputGvNodeHeader("compound_statement", "Compound Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 statement_loop: statement_loop ';' statement {
-                $$.index = nodeCount++;
-                printf("statement_loop%d [label=\"Statement loop\"]\n", $$.index);
-                printf("statement_loop%d -> statement_loop%d\n", $$.index, $1.index);
-                printf("statement_loop%d -> statement%d\n", $$.index, $3.index);
-                }
+                outputGvNodeHeader("statement_loop", "Statement Loop", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       statement {
-                $$.index = nodeCount++;
-                printf("statement_loop%d [label=\"Statement loop\"]\n", $$.index);
-                printf("statement_loop%d -> statement%d\n", $$.index, $1.index);
-                }
+                outputGvNodeHeader("statement_loop", "Statement Loop", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 statement:      assignment {
-                $$.index = nodeCount++;
-                printf("statement%d [label=\"Statement\"]\n", $$.index);
-                printf("statement%d -> assign%d\n", $$.index, $1.index); }
+                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       procedure_call { printf("Statement: Procedure call.\n"); }
-        |       if_statement
-        |       while_statement
+        |       if_statement {
+                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
+        |       while_statement {
+                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       do_statement
-        |       for_statement
+        |       for_statement {
+                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       compound_statement {
-                $$.index = nodeCount++;
-                printf("statement%d [label=\"Statement\"]\n", $$.index);
-                printf("statement%d -> compound_statement%d\n", $$.index, $1.index);
-                }
+                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 assignment:     ident ASSIGN expression {
-                $$.index = nodeCount++;
-                printf("assign%d [label=assign]\n", $$.index);
-                printf("assign%d -> ident%d\n", $$.index, $1.index);
-                printf("assign%d -> expr%d\n", $$.index, $3.index);}
+                outputGvNodeHeader("assign", "Assign", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 procedure_call: CALL ident { printf("[label=\"Call\"]\n"); }
                 ;
 
-if_statement:   IF expression THEN statement END IF {printf("IF\n");}
+if_statement:   IF expression THEN statement END IF {
+                outputGvNodeHeader("if", "IF", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 while_statement:
-                WHILE expression DO statement END WHILE {printf("While\n"); }
+                WHILE expression DO statement_loop END WHILE {
+                outputGvNodeHeader("while", "While", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
 
 do_statement:   DO statement WHILE expression END DO {printf("DO\n");}
                 ;
 
-for_statement:  FOR ident ASSIGN expression DO statement END FOR { printf("[label=For]"); }
+for_statement:  FOR ident ASSIGN expression DO statement_loop END FOR {
+                outputGvNodeHeader("for", "For", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 3, &$2, &$4, &$6); }
                 ;
 
 expression:     term {
-                $$.index = nodeCount++;
-                printf("expr%d [label=\"Expr\"]\n", $$.index);
-                printf("expr%d -> term%d\n", $$.index, $1.index); }
+                outputGvNodeHeader("expr", "Expr", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       term '+' term {
-                $$.index = nodeCount++;
-                printf("expr%d [label=\"Expr: +\"]\n", $$.index);
-                printf("expr%d -> term%d\n", $$.index, $1.index);
-                printf("expr%d -> term%d\n", $$.index, $3.index);
-                }
+                outputGvNodeHeader("expr", "Expr: *", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       term '-' term {
-                $$.index = nodeCount++;
-                printf("expr%d [label=\"Expr: -\"]\n", $$.index);
-                printf("expr%d -> term%d\n", $$.index, $1.index);
-                printf("expr%d -> term%d\n", $$.index, $3.index);
-                }
+                outputGvNodeHeader("term", "Term: -", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 term:           id_num '*' id_num {
-                $$.index = nodeCount++;
-                printf("term%d [label=\"term: *\"]\n", $$.index);
-                printf("term%d -> id_num%d\n", $$.index, $1.index);
-                printf("term%d -> id_num%d\n", $$.index, $3.index);
-                }
+                outputGvNodeHeader("term", "Term: *", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       id_num '/' id_num {
-                $$.index = nodeCount++;
-                printf("term%d [label=\"term: /\"]\n", $$.index);
-                printf("term%d -> id_num%d\n", $$.index, $1.index);
-                printf("term%d -> id_num%d\n", $$.index, $3.index);
-                }
+                outputGvNodeHeader("term", "Term: /", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       id_num {
-                $$.index = nodeCount++;
-                printf("term%d [label=\"term\"]\n", $$.index);
-                printf("term%d -> id_num%d\n", $$.index, $1.index); }
+                outputGvNodeHeader("term", "Term", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 id_num:         ident {
-                $$.index = nodeCount++;
-                printf("id_num%d [label=\"id_num\"]\n", $$.index);
-                printf("id_num%d -> ident%d\n", $$.index, $1.index); }
+                outputGvNodeHeader("id_num", "ID Num", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       number {
-                $$.index = nodeCount++;
-                printf("id_num%d [label=\"id_num\"]\n", $$.index);
-                printf("id_num%d -> number%d\n", $$.index, $1.index); }
+                outputGvNodeHeader("id_num", "ID Num", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
-number:         NUMBER { $1.index = nodeCount++; printf("number%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue); $$ = $1; }
+number:         NUMBER {
+                $1.index = nodeCount++;
+                printf("number%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue);
+                $$ = $1;
+                $$.type = "number";
+                $$.label = "Number";}
                 ;
 
-ident:          IDENT { $1.index = nodeCount++; printf("ident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text); $$ = $1; }
+ident:          IDENT {
+                $1.index = nodeCount++;
+                printf("ident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
+                $$ = $1;
+                $$.type = "ident";
+                $$.label = "Ident";}
                 ;
 
 %%

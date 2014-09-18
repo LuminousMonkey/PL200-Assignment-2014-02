@@ -7,7 +7,7 @@ YACC := bison
 
 YACCVERSION := $(shell expr `$(YACC) --version | grep ^bison | sed 's/^.* //g'` \> 2.5)
 
-CFLAGS = -MMD -Wall -Wextra
+CFLAGS = -MMD -Wall -Wextra --std=c99 -D_GNU_SOURCE
 YFLAGS = -d
 LEXFLAGS = --header-file=src/lexical.h
 
