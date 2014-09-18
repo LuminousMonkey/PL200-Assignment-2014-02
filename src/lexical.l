@@ -36,7 +36,7 @@ WSPACE  [ \t\v\n\f]
 "WHILE"          { return WHILE; }
 
 {LETTERS}*       { yylval.text = strdup(yytext); return IDENT; }
-{DIGITS}*        { yylval.num = atoi(yytext); return NUMBER; }
+{DIGITS}*        { yylval.numValue = atoi(yytext); return NUMBER; }
 
 ":="             { return ASSIGN; }
 ".."             { return INTERVAL; }
