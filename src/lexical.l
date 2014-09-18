@@ -9,6 +9,7 @@ WSPACE  [ \t\v\n\f]
 
 #include <stdio.h>
 
+#include "node.h"
 #include "parser.h"
 %}
 

@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "node.h"
 #include "parser.h"
 #include "lexical.h"
 
@@ -51,18 +52,6 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
   }
 }
 %}
-
-%code requires {
-  typedef struct {
-    int index;
-    int numValue;
-    const char *text;
-    const char *type;
-    const char *label;
-  } NodeStruct;
-
-#define YYSTYPE NodeStruct
-}
 
 %token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION
 %token IDENT IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE
