@@ -348,7 +348,7 @@ id_num:         ident {
 
 number:         NUMBER {
                 $1.index = nodeCount++;
-                printf("\tnumber%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue);
+                printf("\tnumber%d [style=\"rounded\" label=\"number: %d\"]\n", $1.index, $1.numValue);
                 $$ = $1;
                 $$.type = "number";
                 $$.label = "Number";}
@@ -356,7 +356,7 @@ number:         NUMBER {
 
 ident:          IDENT {
                 $1.index = nodeCount++;
-                printf("\tident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
+                printf("\tident%d [style=\"rounded\" label=\"ident: %s\"]\n", $1.index, $1.text);
                 $$ = $1;
                 $$.type = "ident";
                 $$.label = "Ident";
@@ -369,7 +369,9 @@ ident:          IDENT {
 
 int main() {
   printf("digraph G {\n");
-  printf("\tnode [shape=rectangle]\n");
+  printf("\tgraph [fontname = \"Concourse T4\"];");
+  printf("\tedge [fontname = \"Concourse T4\", color=\"#4f80bd\"];");
+  printf("\tnode [pad=\".75\", color=\"#666666\", shape=rectangle, fontname =\"Concourse T4\", fontcolor=\"#4f80bd\"]\n");
 
   do {
     yyparse();
