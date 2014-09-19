@@ -18,7 +18,7 @@ endif
 OUTDIRS := obj
 
 SRCFILES := src/parser.y src/lexical.y
-OBJFILES := obj/parser.o obj/lexical.o
+OBJFILES := obj/parser.o obj/lexical.o obj/node.o
 DEPFILES := $(patsubst obj/%.o,obj/%.d,$(OBJFILES))
 
 .PHONY: clean dirs

@@ -39,6 +39,17 @@ void outputGvNodeHeader(const char* const type,
   printf("%s%d [label=\"%s\"]\n", type, node->index, label);
 }
 
+/*
+ * outputGvNodeEdge
+ *
+ * Takes the parent node, count of the number of children, and a varg
+ * of the children nodes, outputs the links necessary to produce an
+ * edge in GraphViz.
+ *
+ * parent - Parent node.
+ * nArgs - Number of child nodes passed in.
+ * varg - Child nodes to link to.
+ */
 void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
   va_list argp;
 
@@ -49,9 +60,12 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
   for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
     currentChild = va_arg(argp, NodeStruct*);
     if (currentChild->type != NULL) {
-      printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type, currentChild->index);
+      printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type,
+             currentChild->index);
     }
   }
+
+  va_end(argp);
 }
 %}
 
@@ -87,7 +101,13 @@ declaration_list:
         |       declaration_list type_declaration {
                 outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
-        |
+        |       declaration_list procedure_interface {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
+        |       declaration_list function_interface {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
+        |       { initNode(&$$); }
                 ;
 
 const_assignment:
@@ -120,10 +140,37 @@ function_declaration:
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
+procedure_interface:
+                PROCEDURE ident formal_params {
+                outputGvNodeHeader("procedure_interface", "Procedure Interface", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$3); }
+                ;
+
+function_interface:
+                FUNCTION ident formal_params {
+                outputGvNodeHeader("function_interface", "Function Interface", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$3); }
+                ;
+
 type_declaration:
                 TYPE ident ':' type ';' {
                 outputGvNodeHeader("type_declaration", "Type Declaration", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
+                ;
+
+formal_params:  '(' formal_params_ident_list ')' {
+                outputGvNodeHeader("formal_params", "Formal Params", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+        |       { initNode(&$$); }
+                ;
+
+formal_params_ident_list:
+                formal_params_ident_list ';' ident {
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       ident {
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 type:           basic_type {
@@ -308,7 +355,9 @@ ident:          IDENT {
                 printf("ident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
                 $$ = $1;
                 $$.type = "ident";
-                $$.label = "Ident";}
+                $$.label = "Ident";
+                free($$.text);
+                $$.text = NULL;}
                 ;
 
 %%

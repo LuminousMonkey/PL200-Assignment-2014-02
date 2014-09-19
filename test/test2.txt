@@ -6,4 +6,5 @@ DECLARATION OF testdec
   TYPE testtype : fish;
   TYPE asdfasfd : [4..5];
   TYPE blob : ARRAY hip[23..22] OF fish;
+  PROCEDURE hahaha ( werw; yyt; werr)
 DECLARATION END

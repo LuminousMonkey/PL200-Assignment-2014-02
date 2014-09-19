@@ -12,11 +12,13 @@
 typedef struct {
   int index;
   int numValue;
-  const char *text;
+  char *text;
   const char *type;
   const char *label;
 } NodeStruct;
 
 #define YYSTYPE NodeStruct
+
+void initNode(NodeStruct* const inNode);
 
 #endif
