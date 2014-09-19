@@ -1,4 +1,4 @@
-PROG := pl-assignment
+PROG := PL2014_check
 LIBS =
 
 CC := gcc
