@@ -1,7 +1,7 @@
 /* Common Regex */
 LETTERS [a-z]
 DIGITS  [0-9]
-WSPACE  [ \t\v\n\f]
+WSPACE  [ \t\v\f]
 
 %{
 /* Remove function that isn't used. */
@@ -11,10 +11,18 @@ WSPACE  [ \t\v\n\f]
 
 #include "node.h"
 #include "parser.h"
+
+int yycolumn = 1;
+
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; yylloc.last_column = yycolumn+yyleng-1; \
+    yycolumn += yyleng;
+
 %}
 
 %option nounput
 %option warn nodefault
+%option yylineno
 
 %%
 
@@ -64,14 +72,10 @@ WSPACE  [ \t\v\n\f]
 "/"              { return '/'; }
 
 {WSPACE}         { /* Whitespace seperates tokens. */ }
+\n               { yycolumn = 1; }
 .                printf("Unexpected character.\n");
 %%
 
 int yywrap(void) {
   return 1;
-}
-
-void yyerror(const char *msg) {
-  fflush(stdout);
-  fprintf(stderr, "*** %s\n", msg);
 }

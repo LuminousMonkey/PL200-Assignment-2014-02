@@ -1,14 +1,21 @@
 %{
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "node.h"
 #include "parser.h"
 #include "lexical.h"
 
-void yyerror(const char *msg);
+void yyerror(const char *s, ...);
 
-int nodeCount = 0;
+/* Yes, globals, they serve a purpose in this case. */
+static int nodeCount = 0;
+static bool graphVizOutput = false;
+
+/* We expect -gv if the user wants GraphViz output. */
+static const char* gvOutputArgString = "-gv";
 
 /*
  * outputGvNodeHeader
@@ -36,7 +43,9 @@ void outputGvNodeHeader(const char* const type,
   node->type = type;
   node->label = label;
 
-  printf("\t%s%d [label=\"%s\"]\n", type, node->index, label);
+  if (graphVizOutput) {
+    printf("\t%s%d [label=\"%s\"]\n", type, node->index, label);
+  }
 }
 
 /*
@@ -51,27 +60,33 @@ void outputGvNodeHeader(const char* const type,
  * varg - Child nodes to link to.
  */
 void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
-  va_list argp;
+  if (graphVizOutput) {
+    va_list argp;
 
-  va_start(argp, nArgs);
+    va_start(argp, nArgs);
 
-  NodeStruct* currentChild;
+    NodeStruct* currentChild;
 
-  if (nArgs != 0) {
-    printf("\t%s%d -> {", parent->type, parent->index);
+    if (nArgs != 0) {
+      printf("\t%s%d -> {", parent->type, parent->index);
 
-    for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
-      currentChild = va_arg(argp, NodeStruct*);
-      if (currentChild->type != NULL) {
-        printf("%s%d ", currentChild->type, currentChild->index);
+      for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
+        currentChild = va_arg(argp, NodeStruct*);
+        if (currentChild->type != NULL) {
+          printf("%s%d ", currentChild->type, currentChild->index);
+        }
       }
+      printf("}\n");
     }
-    printf("}\n");
-  }
 
-  va_end(argp);
+    va_end(argp);
+  }
 }
 %}
+
+%define parse.lac full
+%define parse.error verbose
+%locations
 
 %token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION
 %token IDENT IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE
@@ -348,7 +363,10 @@ id_num:         ident {
 
 number:         NUMBER {
                 $1.index = nodeCount++;
-                printf("\tnumber%d [style=\"rounded\" label=\"number: %d\"]\n", $1.index, $1.numValue);
+                if (graphVizOutput) {
+                  printf("\tnumber%d [fontcolor=white, color=\"#4f80bd\" "
+                         "style=\"rounded,filled\" label=\"number: %d\"]\n",
+                         $1.index, $1.numValue); }
                 $$ = $1;
                 $$.type = "number";
                 $$.label = "Number";}
@@ -356,7 +374,11 @@ number:         NUMBER {
 
 ident:          IDENT {
                 $1.index = nodeCount++;
-                printf("\tident%d [style=\"rounded\" label=\"ident: %s\"]\n", $1.index, $1.text);
+                if (graphVizOutput) {
+                  printf("\tident%d [fontcolor=white, color=\"#4f80bd\" "
+                         "style=\"rounded,filled\" label=\"ident: %s\"]\n",
+                         $1.index, $1.text);
+                }
                 $$ = $1;
                 $$.type = "ident";
                 $$.label = "Ident";
@@ -365,19 +387,54 @@ ident:          IDENT {
                 ;
 
 %%
-#include <stdio.h>
 
-int main() {
-  printf("digraph G {\n");
-  printf("\tgraph [fontname = \"Concourse T4\"];");
-  printf("\tedge [fontname = \"Concourse T4\", color=\"#4f80bd\"];");
-  printf("\tnode [pad=\".75\", color=\"#666666\", shape=rectangle, fontname =\"Concourse T4\", fontcolor=\"#4f80bd\"]\n");
+int main(int argc, char* argv[]) {
+  if (argc == 2) {
+    if (strncmp (argv[1], gvOutputArgString, strlen(gvOutputArgString)) == 0) {
+      graphVizOutput = true;
+    }
+  }
+
+  if (graphVizOutput) {
+    printf("digraph G {\n");
+    printf("\tgraph [fontname = \"Concourse T4\"];\n");
+    printf("\tedge [arrowhead=vee, fontname = \"Concourse T4\", "
+           "color=\"#4f80bd\"];\n");
+    printf("\tnode [pad=\".75\", color=\"#666666\", shape=rectangle, "
+           "fontname =\"Concourse T4\", fontcolor=\"#4f80bd\"]\n");
+  }
 
   do {
     yyparse();
   } while (!feof(yyin));
 
-  printf("}\n");
+  if (graphVizOutput) {
+    printf("}\n");
+  }
 
   return 0;
+}
+
+void yyerror(const char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  if(yylloc.first_line)
+    fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
+            yylloc.first_line, yylloc.first_column, yylloc.last_line,
+            yylloc.last_column);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
+
+}
+
+void lyyerror(YYLTYPE t, char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  if(t.first_line)
+    fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
+            t.first_line, t.first_column, t.last_line, t.last_column);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }
