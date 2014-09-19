@@ -36,7 +36,7 @@ void outputGvNodeHeader(const char* const type,
   node->type = type;
   node->label = label;
 
-  printf("%s%d [label=\"%s\"]\n", type, node->index, label);
+  printf("\t%s%d [label=\"%s\"]\n", type, node->index, label);
 }
 
 /*
@@ -57,12 +57,16 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
 
   NodeStruct* currentChild;
 
-  for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
-    currentChild = va_arg(argp, NodeStruct*);
-    if (currentChild->type != NULL) {
-      printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type,
-             currentChild->index);
+  if (nArgs != 0) {
+    printf("\t%s%d -> {", parent->type, parent->index);
+
+    for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
+      currentChild = va_arg(argp, NodeStruct*);
+      if (currentChild->type != NULL) {
+        printf("%s%d ", currentChild->type, currentChild->index);
+      }
     }
+    printf("}\n");
   }
 
   va_end(argp);
@@ -344,7 +348,7 @@ id_num:         ident {
 
 number:         NUMBER {
                 $1.index = nodeCount++;
-                printf("number%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue);
+                printf("\tnumber%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue);
                 $$ = $1;
                 $$.type = "number";
                 $$.label = "Number";}
@@ -352,7 +356,7 @@ number:         NUMBER {
 
 ident:          IDENT {
                 $1.index = nodeCount++;
-                printf("ident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
+                printf("\tident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
                 $$ = $1;
                 $$.type = "ident";
                 $$.label = "Ident";
