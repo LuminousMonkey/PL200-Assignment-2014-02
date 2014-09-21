@@ -1,14 +1,21 @@
 %{
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "node.h"
 #include "parser.h"
 #include "lexical.h"
 
-void yyerror(const char *msg);
+void yyerror(const char *s, ...);
 
-int nodeCount = 0;
+/* Yes, globals, they serve a purpose in this case. */
+static int nodeCount = 0;
+static bool graphVizOutput = false;
+
+/* We expect -gv if the user wants GraphViz output. */
+static const char* gvOutputArgString = "-gv";
 
 /*
  * outputGvNodeHeader
@@ -36,24 +43,50 @@ void outputGvNodeHeader(const char* const type,
   node->type = type;
   node->label = label;
 
-  printf("%s%d [label=\"%s\"]\n", type, node->index, label);
+  if (graphVizOutput) {
+    printf("\t%s%d [label=\"%s\"]\n", type, node->index, label);
+  }
 }
 
+/*
+ * outputGvNodeEdge
+ *
+ * Takes the parent node, count of the number of children, and a varg
+ * of the children nodes, outputs the links necessary to produce an
+ * edge in GraphViz.
+ *
+ * parent - Parent node.
+ * nArgs - Number of child nodes passed in.
+ * varg - Child nodes to link to.
+ */
 void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
-  va_list argp;
+  if (graphVizOutput) {
+    va_list argp;
 
-  va_start(argp, nArgs);
+    va_start(argp, nArgs);
 
-  NodeStruct* currentChild;
+    NodeStruct* currentChild;
 
-  for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
-    currentChild = va_arg(argp, NodeStruct*);
-    if (currentChild->type != NULL) {
-      printf("%s%d -> %s%d\n", parent->type, parent->index, currentChild->type, currentChild->index);
+    if (nArgs != 0) {
+      printf("\t%s%d -> {", parent->type, parent->index);
+
+      for (int currentArg = 0; currentArg < nArgs; currentArg++ ) {
+        currentChild = va_arg(argp, NodeStruct*);
+        if (currentChild->type != NULL) {
+          printf("%s%d ", currentChild->type, currentChild->index);
+        }
+      }
+      printf("}\n");
     }
+
+    va_end(argp);
   }
 }
 %}
+
+%define parse.lac full
+%define parse.error verbose
+%locations
 
 %token ARRAY ASSIGN _BEGIN_ CALL CONST DECLARATION DO END FOR FUNCTION
 %token IDENT IF IMPLEMENTATION INTERVAL NUMBER OF PROCEDURE THEN TYPE
@@ -87,7 +120,13 @@ declaration_list:
         |       declaration_list type_declaration {
                 outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
-        |
+        |       declaration_list procedure_interface {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
+        |       declaration_list function_interface {
+                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$2); }
+        |       { initNode(&$$); }
                 ;
 
 const_assignment:
@@ -120,10 +159,37 @@ function_declaration:
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
+procedure_interface:
+                PROCEDURE ident formal_params {
+                outputGvNodeHeader("procedure_interface", "Procedure Interface", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$3); }
+                ;
+
+function_interface:
+                FUNCTION ident formal_params {
+                outputGvNodeHeader("function_interface", "Function Interface", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$3); }
+                ;
+
 type_declaration:
                 TYPE ident ':' type ';' {
                 outputGvNodeHeader("type_declaration", "Type Declaration", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
+                ;
+
+formal_params:  '(' formal_params_ident_list ')' {
+                outputGvNodeHeader("formal_params", "Formal Params", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
+        |       { initNode(&$$); }
+                ;
+
+formal_params_ident_list:
+                formal_params_ident_list ';' ident {
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$1, &$3); }
+        |       ident {
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 type:           basic_type {
@@ -297,7 +363,10 @@ id_num:         ident {
 
 number:         NUMBER {
                 $1.index = nodeCount++;
-                printf("number%d [shape=\"circle\" label=\"number: %d\"]\n", $1.index, $1.numValue);
+                if (graphVizOutput) {
+                  printf("\tnumber%d [fontcolor=white, color=\"#4f80bd\" "
+                         "style=\"rounded,filled\" label=\"number: %d\"]\n",
+                         $1.index, $1.numValue); }
                 $$ = $1;
                 $$.type = "number";
                 $$.label = "Number";}
@@ -305,24 +374,67 @@ number:         NUMBER {
 
 ident:          IDENT {
                 $1.index = nodeCount++;
-                printf("ident%d [shape=\"circle\" label=\"ident: %s\"]\n", $1.index, $1.text);
+                if (graphVizOutput) {
+                  printf("\tident%d [fontcolor=white, color=\"#4f80bd\" "
+                         "style=\"rounded,filled\" label=\"ident: %s\"]\n",
+                         $1.index, $1.text);
+                }
                 $$ = $1;
                 $$.type = "ident";
-                $$.label = "Ident";}
+                $$.label = "Ident";
+                free($$.text);
+                $$.text = NULL;}
                 ;
 
 %%
-#include <stdio.h>
 
-int main() {
-  printf("digraph G {\n");
-  printf("\tnode [shape=rectangle]\n");
+int main(int argc, char* argv[]) {
+  if (argc == 2) {
+    if (strncmp (argv[1], gvOutputArgString, strlen(gvOutputArgString)) == 0) {
+      graphVizOutput = true;
+    }
+  }
+
+  if (graphVizOutput) {
+    printf("digraph G {\n");
+    printf("\tgraph [fontname = \"Concourse T4\"];\n");
+    printf("\tedge [arrowhead=vee, fontname = \"Concourse T4\", "
+           "color=\"#4f80bd\"];\n");
+    printf("\tnode [pad=\".75\", color=\"#666666\", shape=rectangle, "
+           "fontname =\"Concourse T4\", fontcolor=\"#4f80bd\"]\n");
+  }
 
   do {
     yyparse();
   } while (!feof(yyin));
 
-  printf("}\n");
+  if (graphVizOutput) {
+    printf("}\n");
+  }
 
   return 0;
+}
+
+void yyerror(const char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  if(yylloc.first_line)
+    fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
+            yylloc.first_line, yylloc.first_column, yylloc.last_line,
+            yylloc.last_column);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
+
+}
+
+void lyyerror(YYLTYPE t, char *s, ...) {
+  va_list ap;
+  va_start(ap, s);
+
+  if(t.first_line)
+    fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
+            t.first_line, t.first_column, t.last_line, t.last_column);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }
