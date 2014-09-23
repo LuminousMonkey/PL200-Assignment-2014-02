@@ -111,10 +111,10 @@ declaration_unit:
                 ;
 
 declaration_list:
-                declaration_list CONST const_assignment ';' {
+                declaration_list CONST const_declaration ';' {
                 outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       declaration_list VAR var_assignment ';' {
+        |       declaration_list VAR var_declaration ';' {
                 outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       declaration_list type_declaration {
@@ -129,20 +129,20 @@ declaration_list:
         |       { initNode(&$$); }
                 ;
 
-const_assignment:
+const_declaration:
                 ident '=' number {
                 outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       ident '=' number ',' const_assignment {
+        |       ident '=' number ',' const_declaration {
                 outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
-var_assignment:
-                ident ':' number {
+var_declaration:
+                ident ':' ident {
                 outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       ident ':' number ',' var_assignment {
+        |       ident ':' ident ',' var_declaration {
                 outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
@@ -258,10 +258,10 @@ implementation_part:
                 ;
 
 specification_part:
-                CONST const_assignment ';' {
+                CONST const_declaration ';' {
                 outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
-        |       VAR var_assignment ';' {
+        |       VAR var_declaration ';' {
                 outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
         |       procedure_declaration {
@@ -287,21 +287,23 @@ statement_loop: statement_loop ';' statement {
                 ;
 
 statement:      assignment {
-                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
-        |       procedure_call { printf("Statement: Procedure call.\n"); }
+        |       procedure_call {
+                outputGvNodeHeader("statement", "Statement: Call", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$1); }
         |       if_statement {
-                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: If", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       while_statement {
-                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: While", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       do_statement
         |       for_statement {
-                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: For", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       compound_statement {
-                outputGvNodeHeader("statement", "Statement", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: Compound", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
@@ -310,7 +312,9 @@ assignment:     ident ASSIGN expression {
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
-procedure_call: CALL ident { printf("[label=\"Call\"]\n"); }
+procedure_call: CALL ident {
+                outputGvNodeHeader("call", "Call", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 if_statement:   IF expression THEN statement END IF {
