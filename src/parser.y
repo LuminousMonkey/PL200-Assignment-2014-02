@@ -131,19 +131,19 @@ declaration_list:
 
 const_declaration:
                 ident '=' number {
-                outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
+                outputGvNodeHeader("const_dec", "Const Decl", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident '=' number ',' const_declaration {
-                outputGvNodeHeader("const_assign", "Const Assign", &$$, &nodeCount);
+                outputGvNodeHeader("const_dec", "Const Decl", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
 var_declaration:
                 ident ':' ident {
-                outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
+                outputGvNodeHeader("var_dec", "Var Decl", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident ':' ident ',' var_declaration {
-                outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
+                outputGvNodeHeader("var_dec", "Var Decl", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
