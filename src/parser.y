@@ -139,10 +139,10 @@ const_assignment:
                 ;
 
 var_assignment:
-                ident ':' number {
+                ident ':' ident {
                 outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       ident ':' number ',' var_assignment {
+        |       ident ':' ident ',' var_assignment {
                 outputGvNodeHeader("var_assign", "Var Assign", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
@@ -310,7 +310,9 @@ assignment:     ident ASSIGN expression {
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
-procedure_call: CALL ident { printf("[label=\"Call\"]\n"); }
+procedure_call: CALL ident {
+                outputGvNodeHeader("call", "Call", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 if_statement:   IF expression THEN statement END IF {
@@ -323,7 +325,9 @@ while_statement:
                 outputGvNodeHeader("while", "While", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
 
-do_statement:   DO statement WHILE expression END DO {printf("DO\n");}
+do_statement:   DO statement WHILE expression END DO {
+                outputGvNodeHeader("do", "Do", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 for_statement:  FOR ident ASSIGN expression DO statement_loop END FOR {
