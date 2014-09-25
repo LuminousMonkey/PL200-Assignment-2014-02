@@ -327,7 +327,9 @@ while_statement:
                 outputGvNodeHeader("while", "While", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
 
-do_statement:   DO statement WHILE expression END DO {printf("DO\n");}
+do_statement:   DO statement WHILE expression END DO {
+                outputGvNodeHeader("do", "Do", &$$, &nodeCount);
+                outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 for_statement:  FOR ident ASSIGN expression DO statement_loop END FOR {
