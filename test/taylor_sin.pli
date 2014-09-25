@@ -20,7 +20,5 @@ IMPLEMENTATION OF taylor
 			delta := 2;
 			CALL loop
 		END;
-	BEGIN
-		CALL sin
-	END
+	CALL sin
 .
