@@ -6,9 +6,12 @@
 
 #include "node.h"
 #include "parser.h"
-#include "lexical.h"
 
+/* Defined below */
 void yyerror(const char *s, ...);
+
+int yylex(void);
+extern FILE *yyin;
 
 /* Yes, globals, they serve a purpose in this case. */
 static int nodeCount = 0;

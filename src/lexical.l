@@ -8,6 +8,7 @@ WSPACE  [ \t\v\f]
 #define YY_NO_INPUT
 
 #include <stdio.h>
+#include <string.h>
 
 #include "node.h"
 #include "parser.h"
