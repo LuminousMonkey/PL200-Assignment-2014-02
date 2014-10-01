@@ -106,30 +106,32 @@ basic_program:  declaration_unit
 
 declaration_unit:
                 DECLARATION OF ident
-                declaration_list
+                opt_const_declaration
+                opt_var_declaration
+                opt_type_declaration
+                opt_procedure_interface
+                opt_function_interface
                 DECLARATION END {
                 outputGvNodeHeader("declaration", "Declaration Unit", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$3, &$4, &$5);
                 }
                 ;
 
-declaration_list:
-                declaration_list CONST const_declaration ';' {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       declaration_list VAR var_declaration ';' {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 2, &$1, &$3); }
-        |       declaration_list type_declaration {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 2, &$1, &$2); }
-        |       declaration_list procedure_interface {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 2, &$1, &$2); }
-        |       declaration_list function_interface {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
-                outputGvNodeEdge(&$$, 2, &$1, &$2); }
-        |       { initNode(&$$); }
+opt_const_declaration:
+                CONST const_declaration ';' {
+                  outputGvNodeHeader("opt_const_declaration", "Opt Const Decl", &$$, &nodeCount);
+                  outputGvNodeEdge(&$$, 1, &$2); }
+                |       {}
+                ;
+
+opt_var_declaration:
+                VAR var_declaration ';' {}
+                |       {}
+                ;
+
+opt_type_declaration:
+                type_declaration {}
+                |       {}
                 ;
 
 const_declaration:
@@ -162,16 +164,18 @@ function_declaration:
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
-procedure_interface:
+opt_procedure_interface:
                 PROCEDURE ident formal_params {
-                outputGvNodeHeader("procedure_interface", "Procedure Interface", &$$, &nodeCount);
+                outputGvNodeHeader("opt_procedure_interface", "Procedure Interface", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
+        |       {}
                 ;
 
-function_interface:
+opt_function_interface:
                 FUNCTION ident formal_params {
-                outputGvNodeHeader("function_interface", "Function Interface", &$$, &nodeCount);
+                outputGvNodeHeader("opt_function_interface", "Function Interface", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
+        |       {}
                 ;
 
 type_declaration:
