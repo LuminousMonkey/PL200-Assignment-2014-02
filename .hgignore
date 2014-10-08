@@ -5,3 +5,4 @@ src/lexical\.(c|h)
 src/parser\.(c|h)
 Experiments
 bison\.report
+test

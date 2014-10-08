@@ -41,6 +41,8 @@ static const char* gvOutputArgString = "-gv";
  */
 void outputGvNodeHeader(const char* const type,
                         const char* const label,
+                        const int startLine, const int endLine,
+                        YYLTYPE *loc,
                         NodeStruct *node, int* const inNodeCounter) {
   node->index = (*inNodeCounter)++;
   node->type = type;
@@ -48,7 +50,12 @@ void outputGvNodeHeader(const char* const type,
 
   if (graphVizOutput) {
     printf("\t%s%d [label=\"%s\"]\n", type, node->index, label);
+  } else {
+    printf("Line: %d to %d. Non-terminal: %s\n", startLine, endLine, label);
   }
+
+  loc->first_line = startLine;
+  loc->last_line = endLine;
 }
 
 /*
@@ -108,265 +115,327 @@ declaration_unit:
                 DECLARATION OF ident
                 declaration_list
                 DECLARATION END {
-                outputGvNodeHeader("declaration", "Declaration Unit", &$$, &nodeCount);
+                outputGvNodeHeader("declaration", "Declaration Unit",
+                                   @1.first_line, @6.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$3, &$4, &$5);
                 }
                 ;
 
 declaration_list:
                 declaration_list CONST const_declaration ';' {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeHeader("declaration_list", "Declaration List",
+                                   @1.first_line, @4.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       declaration_list VAR var_declaration ';' {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeHeader("declaration_list", "Declaration List",
+                                   @1.first_line, @4.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       declaration_list type_declaration {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeHeader("declaration_list", "Declaration List",
+                                   @1.first_line, @2.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
         |       declaration_list procedure_interface {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeHeader("declaration_list", "Declaration List",
+                                   @1.first_line, @2.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
         |       declaration_list function_interface {
-                outputGvNodeHeader("declaration_list", "Declaration List", &$$, &nodeCount);
+                outputGvNodeHeader("declaration_list", "Declaration List",
+                                   @1.first_line, @2.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
         |       { initNode(&$$); }
                 ;
 
 const_declaration:
                 ident '=' number {
-                outputGvNodeHeader("const_dec", "Const Decl", &$$, &nodeCount);
+                outputGvNodeHeader("const_dec", "Const Decl",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident '=' number ',' const_declaration {
-                outputGvNodeHeader("const_dec", "Const Decl", &$$, &nodeCount);
+                outputGvNodeHeader("const_dec", "Const Decl",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
 var_declaration:
                 ident ':' ident {
-                outputGvNodeHeader("var_dec", "Var Decl", &$$, &nodeCount);
+                outputGvNodeHeader("var_dec", "Var Decl",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident ':' ident ',' var_declaration {
-                outputGvNodeHeader("var_dec", "Var Decl", &$$, &nodeCount);
+                outputGvNodeHeader("var_dec", "Var Decl",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$1, &$3, &$5); }
                 ;
 
 procedure_declaration:
                 PROCEDURE ident ';' block ';' {
-                outputGvNodeHeader("procedure_decl", "Procedure Decl", &$$, &nodeCount);
+                outputGvNodeHeader("procedure_decl", "Procedure Decl",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 function_declaration:
                 FUNCTION ident ';' block ';' {
-                outputGvNodeHeader("function_decl", "Function Decl", &$$, &nodeCount);
+                outputGvNodeHeader("function_decl", "Function Decl",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 procedure_interface:
                 PROCEDURE ident formal_params {
-                outputGvNodeHeader("procedure_interface", "Procedure Interface", &$$, &nodeCount);
+                outputGvNodeHeader("procedure_interface", "Procedure Interface",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
                 ;
 
 function_interface:
                 FUNCTION ident formal_params {
-                outputGvNodeHeader("function_interface", "Function Interface", &$$, &nodeCount);
+                outputGvNodeHeader("function_interface", "Function Interface",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
                 ;
 
 type_declaration:
                 TYPE ident ':' type ';' {
-                outputGvNodeHeader("type_declaration", "Type Declaration", &$$, &nodeCount);
+                outputGvNodeHeader("type_declaration", "Type Declaration",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 formal_params:  '(' formal_params_ident_list ')' {
-                outputGvNodeHeader("formal_params", "Formal Params", &$$, &nodeCount);
+                outputGvNodeHeader("formal_params", "Formal Params",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
         |       { initNode(&$$); }
                 ;
 
 formal_params_ident_list:
                 formal_params_ident_list ';' ident {
-                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident {
-                outputGvNodeHeader("formal_params_ident_list", "Param Ident List", &$$, &nodeCount);
+                outputGvNodeHeader("formal_params_ident_list", "Param Ident List",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 type:           basic_type {
-                outputGvNodeHeader("type", "Type", &$$, &nodeCount);
+                outputGvNodeHeader("type", "Type",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       array_type {
-                outputGvNodeHeader("type", "Type", &$$, &nodeCount);
+                outputGvNodeHeader("type", "Type",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 basic_type:     ident {
-                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeHeader("basic_type", "Basic Type",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       enumerated_type {
-                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeHeader("basic_type", "Basic Type",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       range_type {
-                outputGvNodeHeader("basic_type", "Basic Type", &$$, &nodeCount);
+                outputGvNodeHeader("basic_type", "Basic Type",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 enumerated_type:
                 '{' ident_list '}' {
-                outputGvNodeHeader("enumerated_type", "Enumerated Type", &$$, &nodeCount);
+                outputGvNodeHeader("enumerated_type", "Enumerated Type",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 ident_list:     ident_list ',' ident {
-                outputGvNodeHeader("ident_list", "Ident List", &$$, &nodeCount);
+                outputGvNodeHeader("ident_list", "Ident List",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       ident {
-                outputGvNodeHeader("ident_list", "Ident List", &$$, &nodeCount);
+                outputGvNodeHeader("ident_list", "Ident List",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 range_type:     '[' range ']' {
-                outputGvNodeHeader("range_type", "Range Type", &$$, &nodeCount);
+                outputGvNodeHeader("range_type", "Range Type",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 array_type:     ARRAY ident '[' range ']' OF type {
-                outputGvNodeHeader("array", "Array", &$$, &nodeCount);
+                outputGvNodeHeader("array", "Array",
+                                   @1.first_line, @7.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$2, &$4, &$7); }
                 ;
 
 range:          number INTERVAL number {
-                outputGvNodeHeader("range", "Range", &$$, &nodeCount);
+                outputGvNodeHeader("range", "Range",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 implementation_unit:
                 IMPLEMENTATION OF ident block '.' {
-                outputGvNodeHeader("implem_unit", "Implementation", &$$, &nodeCount);
+                outputGvNodeHeader("implem_unit", "Implementation",
+                                   @1.first_line, @5.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$3, &$4); }
                 ;
 
 block:          specification_part implementation_part {
-                outputGvNodeHeader("block", "Block", &$$, &nodeCount);
+                outputGvNodeHeader("block", "Block",
+                                   @1.first_line, @2.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$2); }
                 ;
 
 implementation_part:
                 statement {
-                outputGvNodeHeader("implem_part", "Implem Part", &$$, &nodeCount);
+                outputGvNodeHeader("implem_part", "Implem Part",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 specification_part:
                 CONST const_declaration ';' {
-                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeHeader("spec_part", "Spec Part",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
         |       VAR var_declaration ';' {
-                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeHeader("spec_part", "Spec Part",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
         |       procedure_declaration {
-                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeHeader("spec_part", "Spec Part",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       function_declaration {
-                outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
+                outputGvNodeHeader("spec_part", "Spec Part",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 compound_statement:
                 _BEGIN_ statement_loop END {
-                outputGvNodeHeader("compound_statement", "Compound Statement", &$$, &nodeCount);
+                outputGvNodeHeader("compound_statement", "Compound Statement",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 statement_loop: statement_loop ';' statement {
-                outputGvNodeHeader("statement_loop", "Statement Loop", &$$, &nodeCount);
+                outputGvNodeHeader("statement_loop", "Statement Loop",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       statement {
-                outputGvNodeHeader("statement_loop", "Statement Loop", &$$, &nodeCount);
+                outputGvNodeHeader("statement_loop", "Statement Loop",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 statement:      assignment {
-                outputGvNodeHeader("statement", "Statement: Assign", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: Assign",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       procedure_call {
-                outputGvNodeHeader("statement", "Statement: Call", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: Call",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       if_statement {
-                outputGvNodeHeader("statement", "Statement: If", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: If",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       while_statement {
-                outputGvNodeHeader("statement", "Statement: While", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: While",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
-        |       do_statement
+        |       do_statement {
+                outputGvNodeHeader("statement", "Statement: Do",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
+                }
         |       for_statement {
-                outputGvNodeHeader("statement", "Statement: For", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: For",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       compound_statement {
-                outputGvNodeHeader("statement", "Statement: Compound", &$$, &nodeCount);
+                outputGvNodeHeader("statement", "Statement: Compound",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 assignment:     ident ASSIGN expression {
-                outputGvNodeHeader("assign", "Assign", &$$, &nodeCount);
+                outputGvNodeHeader("assign", "Assign",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 procedure_call: CALL ident {
-                outputGvNodeHeader("call", "Call", &$$, &nodeCount);
+                outputGvNodeHeader("call", "Call",
+                                   @1.first_line, @2.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$2); }
                 ;
 
 if_statement:   IF expression THEN statement END IF {
-                outputGvNodeHeader("if", "If", &$$, &nodeCount);
+                outputGvNodeHeader("if", "If",
+                                   @1.first_line, @6.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 while_statement:
                 WHILE expression DO statement_loop END WHILE {
-                outputGvNodeHeader("while", "While", &$$, &nodeCount);
+                outputGvNodeHeader("while", "While",
+                                   @1.first_line, @6.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
 
 do_statement:   DO statement WHILE expression END DO {
-                outputGvNodeHeader("do", "Do", &$$, &nodeCount);
+                outputGvNodeHeader("do", "Do",
+                                   @1.first_line, @6.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$4); }
                 ;
 
 for_statement:  FOR ident ASSIGN expression DO statement_loop END FOR {
-                outputGvNodeHeader("for", "For", &$$, &nodeCount);
+                outputGvNodeHeader("for", "For",
+                                   @1.first_line, @8.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 3, &$2, &$4, &$6); }
                 ;
 
 expression:     term {
-                outputGvNodeHeader("expr", "Expr", &$$, &nodeCount);
+                outputGvNodeHeader("expr", "Expr",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       term '+' term {
-                outputGvNodeHeader("expr", "Expr: *", &$$, &nodeCount);
+                outputGvNodeHeader("expr", "Expr: *",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       term '-' term {
-                outputGvNodeHeader("term", "Term: -", &$$, &nodeCount);
+                outputGvNodeHeader("term", "Term: -",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
                 ;
 
 term:           id_num '*' id_num {
-                outputGvNodeHeader("term", "Term: *", &$$, &nodeCount);
+                outputGvNodeHeader("term", "Term: *",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       id_num '/' id_num {
-                outputGvNodeHeader("term", "Term: /", &$$, &nodeCount);
+                outputGvNodeHeader("term", "Term: /",
+                                   @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$1, &$3); }
         |       id_num {
-                outputGvNodeHeader("term", "Term", &$$, &nodeCount);
+                outputGvNodeHeader("term", "Term",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
 id_num:         ident {
-                outputGvNodeHeader("id_num", "ID Num", &$$, &nodeCount);
+                outputGvNodeHeader("id_num", "ID Num",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
         |       number {
-                outputGvNodeHeader("id_num", "ID Num", &$$, &nodeCount);
+                outputGvNodeHeader("id_num", "ID Num",
+                                   @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
                 ;
 
@@ -375,7 +444,11 @@ number:         NUMBER {
                 if (graphVizOutput) {
                   printf("\tnumber%d [fontcolor=white, color=\"#4f80bd\" "
                          "style=\"rounded,filled\" label=\"number: %d\"]\n",
-                         $1.index, $1.numValue); }
+                         $1.index, $1.numValue);
+                } else {
+                  printf("Line: %d to %d. Terminal: Number (%d)\n",
+                         yyloc.first_line, yyloc.last_line, $1.numValue);
+                }
                 $$ = $1;
                 $$.type = "number";
                 $$.label = "Number";}
@@ -387,6 +460,9 @@ ident:          IDENT {
                   printf("\tident%d [fontcolor=white, color=\"#4f80bd\" "
                          "style=\"rounded,filled\" label=\"ident: %s\"]\n",
                          $1.index, $1.text);
+                } else {
+                  printf("Line: %d to %d. Terminal: Ident (%s)\n",
+                         yyloc.first_line, yyloc.last_line, $1.text);
                 }
                 $$ = $1;
                 $$.type = "ident";
