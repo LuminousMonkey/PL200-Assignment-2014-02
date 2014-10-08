@@ -277,6 +277,7 @@ specification_part:
         |       function_declaration {
                 outputGvNodeHeader("spec_part", "Spec Part", &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
+        |
                 ;
 
 compound_statement:
