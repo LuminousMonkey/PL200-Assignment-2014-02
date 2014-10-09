@@ -495,15 +495,16 @@ int main(int argc, char* argv[]) {
            "fontname =\"Concourse T4\", fontcolor=\"#4f80bd\"]\n");
   }
 
+  int errorCode = 0;
   do {
-    yyparse();
+    errorCode = yyparse();
   } while (!feof(yyin));
 
   if (graphVizOutput) {
     printf("}\n");
   }
 
-  return 0;
+  return errorCode;
 }
 
 void yyerror(const char *s, ...) {
