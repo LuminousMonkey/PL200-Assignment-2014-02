@@ -1,7 +1,7 @@
 /* Common Regex */
 LETTERS [a-z]
 DIGITS  [0-9]
-WSPACE  [ \t\v\f]
+WSPACE  [ \t\v\f\r]
 
 %{
 /* Remove function that isn't used. */
@@ -45,8 +45,8 @@ int yycolumn = 1;
 "VAR"            { return VAR; }
 "WHILE"          { return WHILE; }
 
-{LETTERS}*       { yylval.text = strdup(yytext); return IDENT; }
-{DIGITS}*        { yylval.numValue = atoi(yytext); return NUMBER; }
+{LETTERS}+       { yylval.text = strdup(yytext); return IDENT; }
+{DIGITS}+        { yylval.numValue = atoi(yytext); return NUMBER; }
 
 ":="             { return ASSIGN; }
 ".."             { return INTERVAL; }
@@ -74,7 +74,7 @@ int yycolumn = 1;
 
 {WSPACE}         { /* Whitespace seperates tokens. */ }
 \n               { yycolumn = 1; }
-.                printf("Unexpected character.\n");
+.                printf("Unexpected text: (%s)\n", yylval.text);
 %%
 
 int yywrap(void) {

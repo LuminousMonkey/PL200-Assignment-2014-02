@@ -321,6 +321,7 @@ specification_part:
                 outputGvNodeHeader("spec_part", "Spec Part",
                                    @1.first_line, @1.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 1, &$1); }
+        |
                 ;
 
 compound_statement:
