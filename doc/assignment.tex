@@ -12,24 +12,50 @@
 
 \startbodymatter
 
+\title{Introduction}
+Report for the 2014 Programming Languages assignment, but if you're reading this you would know that already. The EBNF provided follows the specification outline in the lecture notes. However, instead of "::=" for productions \m{\longrightarrow} is used instead, since it's more mathy, and maths is better.
+
+Non-terminals are indicated by "\m{\langle}" and "\m{\rangle}", ranges use square brackets, so "[a-z]" means all lowercase characters from a to z. Brackets, parenthesis, literal text, and the Kleene Cross are used as per the lecture notes.
+
+The output of the program is just the basic output as the Bison parser evaluates the tokens stream provided by the lexer. No effort is made to order it, so terminals will end up being displayed first as the Bison parser is depth first. There is an option to produce Graphviz DOT format output, this can then be passed though Graphviz to produce a graph.
+
+This is done by providing the "-gv" argument, e.g.
+
+./PL2014_check -gv < test/pass/test1.txt \| dot -Tpdf > test.pdf
+
+Test files that were used are freely available on GitHub at:
+
+https://github.com/LuminousMonkey/PL200-Testfiles
+
+This repo is expected to be cloned into a "test" directory in the root of the assignment, it includes a "runTests.sh" file that the Makefile will execute if "make test" is run.
+
+The code is expected to be compiled by Flex 2.5.4 and Bison 2.0, as these are the default versions available on Ark. However, the Makefile will detect newer versions and enable other options that don't make a difference to the generated program. However, if a newer version of Bison is available, the two lines that are commented out in parser.y:
+
+\%define parse.lac full\crlf
+\%define parse.error verbose
+
+Can be uncommented to provide better syntax errors.
+
+\page[yes]
+
 \chapter{EBNF Specification}
 
 \setupformulas[align=right]
 
 \startformula \startalign
-  \NC \langle \text{ident} \rangle \longrightarrow \NC [a..z]\NR
-  \NC \langle \text{number} \rangle \longrightarrow \NC [0..9]\NR
+  \NC \langle \text{ident} \rangle \longrightarrow \NC [a..z]+\NR
+  \NC \langle \text{number} \rangle \longrightarrow \NC [0..9]+\NR
   \NC \langle \text{id\_num} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ |\ \langle \text{number} \rangle\NR
   \NC \langle \text{term} \rangle \longrightarrow\NC \langle \text{id\_num} \rangle\ \{\text{"*"}\ |\ \text{"/"}\ \langle \text{id\_num} \rangle \}\NR
   \NC \langle \text{expression} \rangle \longrightarrow\NC \langle \text{term} \rangle\ \{(\text{"+"}\ |\ \text{"-"})\ \langle \text{term} \rangle \}\NR
-  \NC \langle \text{statement\_loop} \rangle \longrightarrow\NC \langle \text{statement} \rangle\ \{";"\ statement\_loop\}\NR
-  \NC \langle \text{compound\_statement} \rangle \longrightarrow\NC \text{"BEGIN"}\ \langle \text{statement\_loop}\ \rangle \text{"END"}\NR
-  \NC \langle \text{for\_statement} \rangle \longrightarrow\NC \text{"FOR"}\ \langle \text{statement\_loop}\ \rangle \text{"END"}\NR
-  \NC \langle \text{do\_statement} \rangle \longrightarrow\NC \text{"DO"}\ \langle \text{statement\_loop} \rangle \text{"WHILE"}\ \langle \text{expression}\ \rangle \text{"END DO"}\NR
-  \NC \langle \text{while\_statement} \rangle \longrightarrow\NC \text{"WHILE"}\ \langle \text{expression}\ \rangle \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"END WHILE"}\NR
+  \NC \langle \text{statement\_loop} \rangle \longrightarrow\NC \langle \text{statement} \rangle\ \{";"\ \langle\text{statement\_loop} \rangle\}\NR
+  \NC \langle \text{compound\_statement} \rangle \longrightarrow\NC \text{"BEGIN"}\ \langle \text{statement\_loop}\ \rangle\ \text{"END"}\NR
+  \NC \langle \text{for\_statement} \rangle \longrightarrow\NC \text{"FOR"}\ \langle \text{statement\_loop}\ \rangle\ \text{"END"}\NR
+  \NC \langle \text{do\_statement} \rangle \longrightarrow\NC \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"WHILE"}\ \langle \text{expression}\ \rangle\ \text{"END DO"}\NR
+  \NC \langle \text{while\_statement} \rangle \longrightarrow\NC \text{"WHILE"}\ \langle \text{expression}\ \rangle\ \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"END WHILE"}\NR
   \NC \langle \text{if\_statement} \rangle \longrightarrow\NC \text{"IF"}\ \langle \text{expression} \rangle\ \text{"THEN"}\ \langle \text{statement\_loop} \rangle\ \text{"END IF"}\NR
   \NC \langle \text{procedure\_call} \rangle \longrightarrow\NC \text{"CALL"}\ \langle \text{ident} \rangle\NR
-  \NC \langle \text{assignment} \rangle \longrightarrow\NC \langle \text{ident}\ \rangle \text{":="}\ \langle \text{expression} \rangle\NR
+  \NC \langle \text{assignment} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ \text{":="}\ \langle \text{expression} \rangle\NR
   \NC \langle \text{statement} \rangle \longrightarrow \NC \langle \text{assignment} \rangle\NR
   \NC\NC |\ \langle \text{procedure\_call} \rangle\NR
   \NC\NC |\ \langle \text{if\_statement} \rangle\NR
@@ -49,7 +75,7 @@
   \NC\langle \text{block} \rangle \longrightarrow\NC \langle \text{specification_part} \rangle\ \langle \text{implementation_part} \rangle\NR
   \NC\langle \text{implementation\_unit} \rangle \longrightarrow\NC \text{"IMPLEMENTATION"}\ \text{"OF"}\ \langle \text{ident} \rangle\ \langle \text{block} \rangle\ \text{"."}\NR
   \NC\langle \text{range} \rangle \longrightarrow\NC \langle \text{number} \rangle\ \text{".."}\ \langle \text{number} \rangle\NR
-  \NC\langle \text{array\_type} \rangle \longrightarrow\NC \text{"ARRAY"}\ \langle \text{ident} \rangle\ \text{"["}\ \langle \text{range} \rangle\ \text{"]"} \text{"OF"}\ \langle \text{type} \rangle\NR
+  \NC\langle \text{array\_type} \rangle \longrightarrow\NC \text{"ARRAY"}\ \langle \text{ident} \rangle\ \text{"["}\ \langle \text{range} \rangle\ \text{"]"}\ \text{"OF"}\ \langle \text{type} \rangle\NR
   \NC\langle \text{range\_type} \rangle \longrightarrow\NC \text{"["}\ \langle \text{range} \rangle\ \text{"]"}\NR
   \NC\langle \text{enumerated\_type} \rangle \longrightarrow\NC \text{"\{"}\ \langle \text{ident} \rangle\ \{\text{","}\ \langle \text{ident} \rangle\}\ "\}"\NR
   \NC\langle \text{basic\_type} \rangle \longrightarrow\NC \langle \text{ident} \rangle\NR
@@ -64,15 +90,33 @@
   \NC\langle \text{type\_declaration} \rangle \longrightarrow\NC \text{"TYPE"}\ \langle \text{ident} \rangle\ \text{":"}\ \langle \text{ident} \rangle\ \text{";"}\NR
   \NC\langle \text{function\_interface} \rangle \longrightarrow\NC \text{"FUNCTION"}\ \langle \text{ident} \rangle\ \{\langle \text{formal_parameters}\rangle\}\NR
   \NC\langle \text{procedure\_interface} \rangle \longrightarrow\NC \text{"PROCEDURE"}\ \langle \text{ident} \rangle\ \{\langle \text{formal\_parameters}\rangle\}\NR
-  \NC\langle \text{declaration\_list} \rangle \longrightarrow\NC \langle \text{declaration_list} \rangle\ \{\text{"CONST"}\ \langle \text{constant\_declaration} \rangle\NR
-  \NC\NC |\ \text{"VAR"}\ \langle \text{variable\_declaration}\rangle\NR
-  \NC\NC |\ \langle \text{type\_declaraton} \rangle\NR
-  \NC\NC |\ \langle \text{procedure\_interface} \rangle\NR
-  \NC\NC |\ \langle \text{function\_interface} \rangle\}\NR
-  \NC\langle \text{declaration\_unit} \rangle \longrightarrow\NC \text{"DECLARATION"}\ \text{"OF"}\ \langle \text{ident} \rangle\ \langle \text{declaration_list} \rangle\NR
+  \NC\langle \text{declaration\_unit} \rangle \longrightarrow\NC \text{"DECLARATION"}\ \text{"OF"}\ \langle \text{ident} \rangle\NR
+  \NC\NC \{\text{"CONST"}\ \langle \text{constant\_declaration} \rangle\}\NR
+  \NC\NC \{\text{"VAR"}\ \langle \text{variable\_declaration} \rangle\}\NR
+  \NC\NC \{\langle \text{type\_declaraton} \rangle\}\NR
+  \NC\NC \{\langle \text{procedure\_interface} \rangle\}\NR
+  \NC\NC \{\langle \text{function\_interface} \rangle\}\NR
   \NC\NC\text{"DECLARATION"}\ \text{"END"}\NR
   \NC\langle \text{basic\_program} \rangle \longrightarrow\NC \langle \text{declaration_unit}\ \rangle\ |\  \langle \text{implementation_unit}\rangle
 \stopalign \stopformula
+\page[yes]
+
+\chapter{Build of the parser and syntax checker}
+
+\section{Lexer}
+The lexer is the simplier of the two, it just takes the stream of input and matches character sequences. These matches are specified in the lexer file via regular expressions, when a match occurs C code can be specified to be run. On the whole, the values that get returned are simple enumerated values that can be used in the parser for the syntax rules. In the PL2014 language, we only have two different classes of tokens that need more to be done. With single character tokens, the value of the character itself is returned. Bison actually generates the enums used (via the \%token directive) and will ensure that any token enums generated do not conflict with single character values.
+
+\subsection{Numbers and Letters}
+Numbers and letters are different from the other tokens we are using, as they have a value associated with them. For example "1232" is actually the decimal value 1232, a sequence of letters (that don't match language keywords) are identifiers. We're not just interested in that that represent a lexical token number of "NUMBER" or "LETTER", but also their value. So in this case, we have to parse these tokens to extract this value.
+
+In the case of numbers, we find the actual number value they represent, in the case of identifiers, we return the string value of the characters that make up the token. Because we still need to return an enum identifier to the parser, we use a struct to hold these values. Flex and Bison give this provision though YYSTYPE.
+
+YYSTYPE is a pre-processor macro, then, when defined, will be used to set the type of the "yylval" variable. This variable is made available to the code that each tokenisation rule that is defined in Flex. The structure used for tokens in this assignment can be found in the "node.h" file. Looking at the \{LETTERS\} and \{DIGITS\} rules in the "lexical.l" file you can see text, or numValues assigned based on the token value.
+
+\subsection{Line numbers, whitespace, anything else not defined}
+The only remaining rules are concerned with things such as whitespace (which we ignore), newlines, and anything else we haven't defined. To aid with finding syntax errors, we keep track of line numbers and columns, so the "yycolumn" variable is reset to 1 everytime we have a newline character. Finally, we include a any character expression, so if any characters not specified in the lexer occur, a warning is output, but it continues.
+
+\section{Parser}
 
 \stopbodymatter
 \stoptext
