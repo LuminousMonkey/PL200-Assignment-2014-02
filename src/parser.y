@@ -191,6 +191,7 @@ opt_procedure_interface:
                 outputGvNodeHeader("procedure_interface", "Procedure Interface",
                                    @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
+        |       { initNode(&$$); }
                 ;
 
 opt_function_interface:
@@ -198,6 +199,7 @@ opt_function_interface:
                 outputGvNodeHeader("function_interface", "Function Interface",
                                    @1.first_line, @3.last_line, &@$, &$$, &nodeCount);
                 outputGvNodeEdge(&$$, 2, &$2, &$3); }
+        |       { initNode(&$$); }
                 ;
 
 type_declaration:
