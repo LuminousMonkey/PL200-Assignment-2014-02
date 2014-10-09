@@ -17,7 +17,7 @@ endif
 
 OUTDIRS := obj
 
-SRCFILES := src/parser.y src/lexical.y
+SRCFILES := src/parser.y src/lexical.l
 OBJFILES := obj/parser.o obj/lexical.o obj/node.o
 DEPFILES := $(patsubst obj/%.o,obj/%.d,$(OBJFILES))
 
