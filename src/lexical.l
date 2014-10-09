@@ -74,7 +74,7 @@ int yycolumn = 1;
 
 {WSPACE}         { /* Whitespace seperates tokens. */ }
 \n               { yycolumn = 1; }
-.                printf("Line: %d - Unexpected text: (%s)\n", yylineno, yylval.text);
+.                {fprintf(stderr, "Line: %d - Unexpected text: (%s)\n", yylineno, yytext);}
 %%
 
 int yywrap(void) {
