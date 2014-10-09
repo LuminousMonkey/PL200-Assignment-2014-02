@@ -1,6 +1,0 @@
-DECLARATION OF testdec
-  CONST test = 1, test = 5;
-  VAR fish : blonk;
-  TYPE blob : ARRAY hip[23..22] OF fish;
-  PROCEDURE hahaha ( werw; yyt; werr);
-DECLARATION END

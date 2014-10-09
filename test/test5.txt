@@ -1,7 +1,0 @@
-DECLARATION OF fredx
-            CONST one = 1, three = 3;
-            VAR a : one, b : three;
-            TYPE t : ARRAY s [1..3] OF ARRAY d [1..3] OF {a,b,c};
-            PROCEDURE proc ( a; s)
-            FUNCTION func ( a; s)
-DECLARATION END

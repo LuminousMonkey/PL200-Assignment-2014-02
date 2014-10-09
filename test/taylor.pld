@@ -1,7 +1,0 @@
-DECLARATION OF taylor
-	TYPE number: [0 .. 999999];
-	PROCEDURE sin(x; iterations; result)
-	PROCEDURE cos(x; iterations; result)
-	PROCEDURE exp(x; iterations; result)
-	PROCEDURE loop
-DECLARATION END

@@ -1,1 +1,0 @@
-IMPLEMENTATION OF testfileCONST blah=1;BEGINtest:=11*1END.
