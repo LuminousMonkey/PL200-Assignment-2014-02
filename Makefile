@@ -9,7 +9,7 @@ YACCVERSION := $(shell expr `$(YACC) --version | grep ^bison | sed 's/^.* //g'` 
 
 CFLAGS = -MMD -Wall -Wextra --std=c99 -D_GNU_SOURCE
 YFLAGS = -d
-LEXFLAGS = 
+LEXFLAGS =
 
 ifeq "$(YACCVERSION)" "1"
 YFLAGS += -Werror --report=all --report-file=bison.report
@@ -43,6 +43,9 @@ src/parser.c: src/parser.y src/lexical.h
 clean:
 	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h \
 	    src/lexical.c src/lexical.h bison.report $(PROG)
+
+test: $(PROG)
+	cd test && ./runTests.sh
 
 # Let GCC work out the dependencies.
 -include $(DEPFILES)
