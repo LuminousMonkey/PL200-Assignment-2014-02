@@ -21,11 +21,15 @@ The output of the program is just the basic output as the Bison parser evaluates
 
 This is done by providing the "-gv" argument, e.g.
 
-./PL2014_check -gv < test/pass/test1.txt \| dot -Tpdf > test.pdf
+\startalignment[center]
+  \bf{./PL2014_check -gv < test/pass/test1.txt \| dot -Tpdf > test.pdf}
+\stopalignment
 
 Test files that were used are freely available on GitHub at:
 
-https://github.com/LuminousMonkey/PL200-Testfiles
+\startalignment[center]
+  \bf{https://github.com/LuminousMonkey/PL200-Testfiles}
+\stopalignment
 
 This repo is expected to be cloned into a "test" directory in the root of the assignment, it includes a "runTests.sh" file that the Makefile will execute if "make test" is run.
 
@@ -117,6 +121,16 @@ YYSTYPE is a pre-processor macro, then, when defined, will be used to set the ty
 The only remaining rules are concerned with things such as whitespace (which we ignore), newlines, and anything else we haven't defined. To aid with finding syntax errors, we keep track of line numbers and columns, so the "yycolumn" variable is reset to 1 everytime we have a newline character. Finally, we include a any character expression, so if any characters not specified in the lexer occur, a warning is output, but it continues.
 
 \section{Parser}
+The real work is performed with the parser, and this is where the EBNF rules are actually used. Since Bison doesn't use EBNF, but uses a BNF type variant, the EBNF has to be translated. This doesn't take much, the rule that shows the difference is the \quote{declaration_unit} rule. The inner declarations of this unit are optional, so each declaration needs to be a seperate rule that includes a blank match.
+
+Looking at \quote{opt_const_declaration} rule for example, the last match for this rule is just empty with no code if it's parsed. This has the effect of making the rule optional.
+
+The C code for the parse rules are just to provide output, either for the GraphViz option, or printing out line numbers and information for the current parsing location. Bison offers some variables for taking values from, and passing back up to the other rules. These variables are \$1, \$2, etc. These represent the YYSTYPE structure that was generated for that terminal, or non-terminal. Correspondingly, \$\$ represents the YYSTYPE structure that is returned for the current rule.
+
+This results in an abstract syntax tree, and example of which is included here:
+
+\externalfigure[test2.pdf][page=1,maxwidth=\textwidth]
+
 
 \stopbodymatter
 \stoptext

@@ -1,5 +1,5 @@
 /* Common Regex */
-LETTERS [a-z]
+LETTERS [a-zA-Z]
 DIGITS  [0-9]
 WSPACE  [ \t\v\f\r]
 
@@ -24,6 +24,7 @@ int yycolumn = 1;
 %option nounput
 %option warn nodefault
 %option yylineno
+%option case-insensitive
 
 %%
 
