@@ -38,7 +38,7 @@ src/lexical.h src/lexical.c: src/lexical.l
 	$(LEX) $(LEXFLAGS) -osrc/lexical.c $<
 
 src/parser.c: src/parser.y src/lexical.h
-	bison $(YFLAGS) -o$@ $<
+	$(YACC) $(YFLAGS) -o$@ $<
 
 clean:
 	rm -f $(OBJFILES) $(DEPFILES) src/parser.c src/parser.h \
