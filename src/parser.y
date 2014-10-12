@@ -15,7 +15,9 @@
 #include "node.h"
 #include "parser.h"
 
-/* Defined below */
+/*
+ * Error reporting function, defined below.
+ */
 void yyerror(const char *s, ...);
 
 int yylex(void);
@@ -114,9 +116,9 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
 }
 %}
 
-//                      %define parse.lac full
-//                      %define parse.error verbose
-%locations
+// %define parse.lac full
+// %define parse.error verbose
+%locations         //   So we can get line numbers of tokens.
 
 /*
  * Let Bison generate the enums for our tokens to be used in the lexer,
@@ -503,6 +505,10 @@ int main(int argc, char* argv[]) {
   return errorCode;
 }
 
+/*
+ * On any error, print out line and column numbers to make it easier
+ * to find the problem.
+ */
 void yyerror(const char *s, ...) {
   va_list ap;
   va_start(ap, s);
@@ -511,18 +517,6 @@ void yyerror(const char *s, ...) {
     fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
             yylloc.first_line, yylloc.first_column, yylloc.last_line,
             yylloc.last_column);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
-
-}
-
-void lyyerror(YYLTYPE t, char *s, ...) {
-  va_list ap;
-  va_start(ap, s);
-
-  if(t.first_line)
-    fprintf(stderr, "Line: %d. Column: %d to Line: %d. Column: %d: error: ",
-            t.first_line, t.first_column, t.last_line, t.last_column);
   vfprintf(stderr, s, ap);
   fprintf(stderr, "\n");
 }

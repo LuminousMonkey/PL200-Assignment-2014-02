@@ -15,16 +15,19 @@ WSPACE  [ \t\v\f\r]
 
 int yycolumn = 1;
 
+/*
+ * Define our action that is always run before the rule action.
+ */
 #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
     yylloc.first_column = yycolumn; yylloc.last_column = yycolumn+yyleng-1; \
     yycolumn += yyleng;
 
 %}
 
-%option nounput                // Remove warning about yyunput defined not used.
+%option nounput
 %option warn nodefault
-%option yylineno               // Generate line numbers
-%option case-insensitive       // Case insensitive
+%option yylineno
+%option case-insensitive
 
 %%
 
@@ -78,6 +81,10 @@ int yycolumn = 1;
 .                {fprintf(stderr, "Line: %d - Unexpected text: (%s)\n", yylineno, yytext);}
 %%
 
+/*
+ * We only scan one file at a time, so always return 1 here. Means an
+ * EOF is the end of lexical parsing.
+ */
 int yywrap(void) {
   return 1;
 }
