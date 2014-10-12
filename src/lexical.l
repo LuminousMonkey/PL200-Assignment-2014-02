@@ -21,10 +21,10 @@ int yycolumn = 1;
 
 %}
 
-%option nounput
+%option nounput                // Remove warning about yyunput defined not used.
 %option warn nodefault
-%option yylineno
-%option case-insensitive
+%option yylineno               // Generate line numbers
+%option case-insensitive       // Case insensitive
 
 %%
 

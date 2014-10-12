@@ -6,6 +6,17 @@
 
 \starttext
 
+\startalignment[flushright]
+  {\tfd{\sansbold Programming Languages 200\crlf 2014 Assignment}}
+  \blank[4cm]
+  Name: Michael Aldred\crlf
+  Student No.: 09831542\crlf
+  \date[][d,month,year]
+\stopalignment
+
+\stopstandardmakeup
+
+\page[yes]
 \startfrontmatter
   \completecontent
 \stopfrontmatter
@@ -50,14 +61,15 @@ Can be uncommented to provide better syntax errors.
   \NC \langle \text{ident} \rangle \longrightarrow \NC [a..z]+\NR
   \NC \langle \text{number} \rangle \longrightarrow \NC [0..9]+\NR
   \NC \langle \text{id\_num} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ |\ \langle \text{number} \rangle\NR
-  \NC \langle \text{term} \rangle \longrightarrow\NC \langle \text{id\_num} \rangle\ \{\text{"*"}\ |\ \text{"/"}\ \langle \text{id\_num} \rangle \}\NR
-  \NC \langle \text{expression} \rangle \longrightarrow\NC \langle \text{term} \rangle\ \{(\text{"+"}\ |\ \text{"-"})\ \langle \text{term} \rangle \}\NR
+  \NC \langle \text{term} \rangle \longrightarrow\NC \langle \text{id\_num} \rangle\ \{\text{"*"}\ |\ \text{"/"}\ \langle \text{id\_num} \rangle \}\text{*}\NR
+  \NC \langle \text{expression} \rangle \longrightarrow\NC \langle \text{term} \rangle\ \{(\text{"+"}\ |\ \text{"-"})\ \langle \text{term} \rangle \}\text{*}\NR
   \NC \langle \text{statement\_loop} \rangle \longrightarrow\NC \langle \text{statement} \rangle\ \{";"\ \langle\text{statement\_loop} \rangle\}\NR
-  \NC \langle \text{compound\_statement} \rangle \longrightarrow\NC \text{"BEGIN"}\ \langle \text{statement\_loop}\ \rangle\ \text{"END"}\NR
-  \NC \langle \text{for\_statement} \rangle \longrightarrow\NC \text{"FOR"}\ \langle \text{statement\_loop}\ \rangle\ \text{"END"}\NR
-  \NC \langle \text{do\_statement} \rangle \longrightarrow\NC \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"WHILE"}\ \langle \text{expression}\ \rangle\ \text{"END DO"}\NR
-  \NC \langle \text{while\_statement} \rangle \longrightarrow\NC \text{"WHILE"}\ \langle \text{expression}\ \rangle\ \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"END WHILE"}\NR
-  \NC \langle \text{if\_statement} \rangle \longrightarrow\NC \text{"IF"}\ \langle \text{expression} \rangle\ \text{"THEN"}\ \langle \text{statement\_loop} \rangle\ \text{"END IF"}\NR
+  \NC \langle \text{compound\_statement} \rangle \longrightarrow\NC \text{"BEGIN"}\ \langle \text{statement\_loop} \rangle\ \text{"END"}\NR
+  \NC \langle \text{for\_statement} \rangle \longrightarrow\NC \text{"FOR"}\ \langle \text{ident} \rangle\ \text{":="}\ \langle \text{expression} \rangle\ \text{"DO"}\ \langle \text{statement\_loop} \rangle\NR
+  \NC\NC \text{"END FOR"}\NR
+  \NC \langle \text{do\_statement} \rangle \longrightarrow\NC \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"WHILE"}\ \langle \text{expression} \rangle\ \text{"END DO"}\NR
+  \NC \langle \text{while\_statement} \rangle \longrightarrow\NC \text{"WHILE"}\ \langle \text{expression} \rangle\ \text{"DO"}\ \langle \text{statement\_loop} \rangle\ \text{"END WHILE"}\NR
+  \NC \langle \text{if\_statement} \rangle \longrightarrow\NC \text{"IF"}\ \langle \text{expression} \rangle\ \text{"THEN"}\ \langle \text{statement} \rangle\ \text{"END IF"}\NR
   \NC \langle \text{procedure\_call} \rangle \longrightarrow\NC \text{"CALL"}\ \langle \text{ident} \rangle\NR
   \NC \langle \text{assignment} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ \text{":="}\ \langle \text{expression} \rangle\NR
   \NC \langle \text{statement} \rangle \longrightarrow \NC \langle \text{assignment} \rangle\NR
@@ -70,28 +82,28 @@ Can be uncommented to provide better syntax errors.
   \NC\langle \text{implementation\_part} \rangle \longrightarrow\NC \langle \text{statement} \rangle\NR
   \NC\langle \text{function\_declaration} \rangle \longrightarrow\NC \text{"FUNCTION"}\ \langle \text{ident} \rangle\ \text{";"}\ \langle \text{block} \rangle\ \text{";"}\NR
   \NC\langle \text{procedure\_declaration} \rangle \longrightarrow\NC \text{"PROCEDURE"}\ \langle \text{ident} \rangle\ \text{";"}\ \langle \text{block} \rangle\ \text{";"}\NR
-  \NC\langle \text{specification_part} \rangle \longrightarrow\NC \{\text{"CONST"}\ \langle \text{constant_declaration} \rangle\NR
-  \NC\NC|\ \text{"VAR"}\ \langle \text{variable_declaration} \rangle\NR
-  \NC\NC|\ \text{procedure_declaration}\ |\ \text{function_declaration}\}\NR
 \stopalign \stopformula
 
 \startformula \startalign
+  \NC\langle \text{specification_part} \rangle \longrightarrow\NC \{\text{"CONST"}\ \langle \text{constant_declaration} \rangle\NR
+  \NC\NC|\ \text{"VAR"}\ \langle \text{variable_declaration} \rangle\NR
+  \NC\NC|\ \text{procedure_declaration}\ |\ \text{function_declaration}\}\NR
   \NC\langle \text{block} \rangle \longrightarrow\NC \langle \text{specification_part} \rangle\ \langle \text{implementation_part} \rangle\NR
   \NC\langle \text{implementation\_unit} \rangle \longrightarrow\NC \text{"IMPLEMENTATION"}\ \text{"OF"}\ \langle \text{ident} \rangle\ \langle \text{block} \rangle\ \text{"."}\NR
   \NC\langle \text{range} \rangle \longrightarrow\NC \langle \text{number} \rangle\ \text{".."}\ \langle \text{number} \rangle\NR
   \NC\langle \text{array\_type} \rangle \longrightarrow\NC \text{"ARRAY"}\ \langle \text{ident} \rangle\ \text{"["}\ \langle \text{range} \rangle\ \text{"]"}\ \text{"OF"}\ \langle \text{type} \rangle\NR
   \NC\langle \text{range\_type} \rangle \longrightarrow\NC \text{"["}\ \langle \text{range} \rangle\ \text{"]"}\NR
-  \NC\langle \text{enumerated\_type} \rangle \longrightarrow\NC \text{"\{"}\ \langle \text{ident} \rangle\ \{\text{","}\ \langle \text{ident} \rangle\}\ "\}"\NR
+  \NC\langle \text{enumerated\_type} \rangle \longrightarrow\NC \text{"\{"}\ \langle \text{ident} \rangle\ \{\text{","}\ \langle \text{ident} \rangle\}\text{*}\ "\}"\NR
   \NC\langle \text{basic\_type} \rangle \longrightarrow\NC \langle \text{ident} \rangle\NR
   \NC\NC |\ \langle \text{enumerated\_type} \rangle\NR
   \NC\NC |\ \langle \text{range\_type} \rangle\NR
   \NC\langle \text{type} \rangle \longrightarrow\NC \langle \text{basic\_type} \rangle\ |\ \langle \text{array\_type} \rangle\NR
   \NC\langle \text{var\_dec\_list} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ \text{":"}\ \langle \text{ident} \rangle\NR
-  \NC\langle \text{variable\_declaration} \rangle \longrightarrow\NC \langle \text{var\_dec\_list} \rangle\ \{ \text{","}\ \langle \text{var\_dec\_list} \rangle\}\ \text{";"}\NR
-  \NC\langle \text{const\_dec\_list} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ \text{":"}\ \langle \text{number} \rangle\NR
-  \NC\langle \text{constant\_declaration} \rangle \longrightarrow\NC \langle \text{const\_dec\_list} \rangle\ \{\text{","}\ \langle \text{const\_dec\_list} \rangle\}\ \text{";"}\NR
-  \NC\langle \text{formal\_parameters} \rangle \longrightarrow\NC \text{"("}\ \langle \text{ident} \rangle\ \{\text{";"}\ \langle \text{ident} \rangle\}\ ")"\NR
-  \NC\langle \text{type\_declaration} \rangle \longrightarrow\NC \text{"TYPE"}\ \langle \text{ident} \rangle\ \text{":"}\ \langle \text{ident} \rangle\ \text{";"}\NR
+  \NC\langle \text{variable\_declaration} \rangle \longrightarrow\NC \langle \text{var\_dec\_list} \rangle\ \{ \text{","}\ \langle \text{var\_dec\_list} \rangle\}\text{*}\ \text{";"}\NR
+  \NC\langle \text{const\_dec\_list} \rangle \longrightarrow\NC \langle \text{ident} \rangle\ \text{"="}\ \langle \text{number} \rangle\NR
+  \NC\langle \text{constant\_declaration} \rangle \longrightarrow\NC \langle \text{const\_dec\_list} \rangle\ \{\text{","}\ \langle \text{const\_dec\_list} \rangle\}\text{*}\ \text{";"}\NR
+  \NC\langle \text{formal\_parameters} \rangle \longrightarrow\NC \text{"("}\ \langle \text{ident} \rangle\ \{\text{";"}\ \langle \text{ident} \rangle\}\text{*}\ ")"\NR
+  \NC\langle \text{type\_declaration} \rangle \longrightarrow\NC \text{"TYPE"}\ \langle \text{ident} \rangle\ \text{":"}\ \langle \text{type} \rangle\ \text{";"}\NR
   \NC\langle \text{function\_interface} \rangle \longrightarrow\NC \text{"FUNCTION"}\ \langle \text{ident} \rangle\ \{\langle \text{formal_parameters}\rangle\}\NR
   \NC\langle \text{procedure\_interface} \rangle \longrightarrow\NC \text{"PROCEDURE"}\ \langle \text{ident} \rangle\ \{\langle \text{formal\_parameters}\rangle\}\NR
   \NC\langle \text{declaration\_unit} \rangle \longrightarrow\NC \text{"DECLARATION"}\ \text{"OF"}\ \langle \text{ident} \rangle\NR
@@ -109,6 +121,9 @@ Can be uncommented to provide better syntax errors.
 
 \section{Lexer}
 The lexer is the simplier of the two, it just takes the stream of input and matches character sequences. These matches are specified in the lexer file via regular expressions, when a match occurs C code can be specified to be run. On the whole, the values that get returned are simple enumerated values that can be used in the parser for the syntax rules. In the PL2014 language, we only have two different classes of tokens that need more to be done. With single character tokens, the value of the character itself is returned. Bison actually generates the enums used (via the \%token directive) and will ensure that any token enums generated do not conflict with single character values.
+
+\subsection{Case Sensitivity}
+The lexer is case-insensitive. This can be changed by removing the line \quote{\%option case-insensitive}, and updating the LETTERS range at the top so it only has \quote{a-z}. Making the lexer case-insensitive means that whitespace is no longer needed for certain rules. However, for the sake of making things understandable, it's recommended to use decent spacing and indenting.
 
 \subsection{Numbers and Letters}
 Numbers and letters are different from the other tokens we are using, as they have a value associated with them. For example "1232" is actually the decimal value 1232, a sequence of letters (that don't match language keywords) are identifiers. We're not just interested in that that represent a lexical token number of "NUMBER" or "LETTER", but also their value. So in this case, we have to parse these tokens to extract this value.

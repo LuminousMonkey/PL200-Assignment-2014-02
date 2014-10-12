@@ -114,8 +114,8 @@ void outputGvNodeEdge(const NodeStruct* const parent, const int nArgs, ...) {
 }
 %}
 
-%define parse.lac full
-%define parse.error verbose
+//                      %define parse.lac full
+//                      %define parse.error verbose
 %locations
 
 /*
