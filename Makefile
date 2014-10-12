@@ -1,9 +1,9 @@
 PROG := PL2014_check
 LIBS =
 
-CC ?= gcc
-LEX ?= flex
-YACC ?= bison
+CC := gcc
+LEX := flex
+YACC := bison
 
 YACCVERSION := $(shell expr `$(YACC) --version | grep ^bison | sed 's/^.* //g'` \> 2.5)
 
